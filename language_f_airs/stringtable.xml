@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project name="Advanced Integrated Radio System">
+	<Package name="Main">
+		<Key ID="STR_AIRS_MOD_TITLE">
+			<Original>Advanced Integrated Radio System</Original>
+			<English>Advanced Integrated Radio System</English>
+		</Key>
+	</Package>
+
+	<Package name="Settings">
+		<Key ID="STR_AIRS_SETTINGS_MAIN_TITLE">
+			<Original>Main Settings</Original>
+			<English>Main Settings</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_ENABLE_TITLE">
+			<Original>Toggle Mod</Original>
+			<English>Toggle Mod</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_ENABLE_TOOLTIP">
+			<Original>Enable/Disable the Advanced Integrated Radio System.</Original>
+			<English>Enable/Disable the Advanced Integrated Radio System.</English>
+		</Key>
+	</Package>
+</Project>
