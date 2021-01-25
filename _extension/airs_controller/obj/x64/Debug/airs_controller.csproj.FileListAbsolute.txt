@@ -1,0 +1,7 @@
+P:\airs\_extension\airs_controller\bin\x64\Debug\airs_controller.dll
+P:\airs\_extension\airs_controller\bin\x64\Debug\airs_controller.pdb
+P:\airs\_extension\airs_controller\obj\x64\Debug\airs_controller.csproj.CoreCompileInputs.cache
+P:\airs\_extension\airs_controller\obj\x64\Debug\airs_controller.dll
+P:\airs\_extension\airs_controller\obj\x64\Debug\airs_controller.pdb
+F:\SteamLibrary\steamapps\common\Arma 3\@airs\airs_controller.dll
+F:\SteamLibrary\steamapps\common\Arma 3\@airs\airs_controller.pdb

@@ -21,4 +21,11 @@
 			<English>Enable/Disable the Advanced Integrated Radio System.</English>
 		</Key>
 	</Package>
+
+	<Package name="Keybinds">
+		<Key ID="STR_AIRS_KEYBINDS_PUSHTOTALK_TITLE">
+			<Original>Push To Talk</Original>
+			<English>Push To Talk</English>
+		</Key>
+	</Package>
 </Project>

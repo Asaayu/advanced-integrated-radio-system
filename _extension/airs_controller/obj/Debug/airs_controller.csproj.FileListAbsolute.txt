@@ -1,0 +1,6 @@
+P:\airs\_extension\airs_controller\bin\Debug\airs_controller.dll
+P:\airs\_extension\airs_controller\bin\Debug\airs_controller.pdb
+P:\airs\_extension\airs_controller\obj\Debug\airs_controller.csprojAssemblyReference.cache
+P:\airs\_extension\airs_controller\obj\Debug\airs_controller.csproj.CoreCompileInputs.cache
+P:\airs\_extension\airs_controller\obj\Debug\airs_controller.dll
+P:\airs\_extension\airs_controller\obj\Debug\airs_controller.pdb
