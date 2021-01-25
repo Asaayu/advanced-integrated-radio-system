@@ -12,6 +12,14 @@
 			<Original>Main Settings</Original>
 			<English>Main Settings</English>
 		</Key>
+		<Key ID="STR_AIRS_SETTINGS_VOICE_TITLE">
+			<Original>Voice Settings</Original>
+			<English>Voice Settings</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_ADD_PTT_TITLE">
+			<Original>Additional PTT Settings</Original>
+			<English>Additional PTT Settings</English>
+		</Key>
 		<Key ID="STR_AIRS_SETTINGS_ENABLE_TITLE">
 			<Original>Toggle Mod</Original>
 			<English>Toggle Mod</English>
@@ -19,6 +27,26 @@
 		<Key ID="STR_AIRS_SETTINGS_ENABLE_TOOLTIP">
 			<Original>Enable/Disable the Advanced Integrated Radio System.</Original>
 			<English>Enable/Disable the Advanced Integrated Radio System.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_TITLE">
+			<Original>Transmission Mode</Original>
+			<English>Transmission Mode</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_TOOLTIP">
+			<Original>How your direct 3D audio will be transmitted.\nPush-To-Talk - Voice data is only transmitted when your PTT key is pressed.\nVoice Activation Detection - Automatically transmit voice data when audio passes the defined volume gate.\nContinuous Transmission - Voice data is continuously transmitted.</Original>
+			<English>How your direct 3D audio will be transmitted.\nPush-To-Talk - Voice data is only transmitted when your PTT key is pressed.\nVoice Activation Detection - Automatically transmit voice data when audio passes the defined volume gate.\nContinuous Transmission - Voice data is continuously transmitted.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_PTT">
+			<Original>Push-To-Talk</Original>
+			<English>Push-To-Talk</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_VAD">
+			<Original>Voice Activation Detection</Original>
+			<English>Voice Activation Detection</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_CT">
+			<Original>Continuous Transmission</Original>
+			<English>Continuous Transmission</English>
 		</Key>
 	</Package>
 

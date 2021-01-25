@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace airs_controller
 {
@@ -42,6 +43,10 @@ namespace airs_controller
             // Reduce output by 1 to avoid accidental overflow
             outputSize--;
 
+            Log.Setup();
+
+            Log.Info("DLL loaded by game...");            
+
             output.Append("AIRS VOIP - " + App.version);
         }
 
@@ -63,9 +68,18 @@ namespace airs_controller
 
     public class Internal
     {
-        internal static int[] pos_asl = new int[3];
-        internal static int[] vector_dir = new int[3];
-        internal static int[] vector_up = new int[3];
+        internal static double[] pos_asl = new double[3];
+        internal static double[] vector_dir = new double[3];
+        internal static double[] vector_up = new double[3];
+
+        internal static bool Update(double[] pos, double[] dir, double[] up)
+        {
+            // Update variables
+            pos_asl = pos;
+            vector_dir = dir;
+            vector_up = up;
+            return true;
+        }
     };
 
     public class Functions
@@ -81,22 +95,20 @@ namespace airs_controller
 
             switch (parameters[0])
             {
-                // UPDATE: Update the internal position, direction and up vectors for 3D space.
+                // UPDATE: Update the internal position, direction and up vectors in 3D space.
                 case "update":
-                    // Set position variable
-                    Internal.pos_asl.SetValue(int.Parse(parameters[1]), 0);
-                    Internal.pos_asl.SetValue(int.Parse(parameters[2]), 1);
-                    Internal.pos_asl.SetValue(int.Parse(parameters[3]), 2);
-
-                    // Set direction vector
-                    Internal.vector_dir.SetValue(int.Parse(parameters[4]), 0);
-                    Internal.vector_dir.SetValue(int.Parse(parameters[5]), 1);
-                    Internal.vector_dir.SetValue(int.Parse(parameters[6]), 2);
-
-                    // Set up vector
-                    Internal.vector_dir.SetValue(int.Parse(parameters[7]), 0);
-                    Internal.vector_dir.SetValue(int.Parse(parameters[8]), 1);
-                    Internal.vector_dir.SetValue(int.Parse(parameters[9]), 2);
+                    try
+                    {
+                        double[] pos = new double[3] { double.Parse(parameters[1]), double.Parse(parameters[2]), double.Parse(parameters[3]) };
+                        double[] dir = new double[3] { double.Parse(parameters[4]), double.Parse(parameters[5]), double.Parse(parameters[6]) };
+                        double[] up = new double[3] { double.Parse(parameters[7]), double.Parse(parameters[8]), double.Parse(parameters[9]) };
+                        Internal.Update(pos, dir, up);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Info("Error updating position, direction, and up vectors...");
+                        Log.Error(e.ToString());
+                    }
                     return "";
 
                 // INFO: Show version information
@@ -106,4 +118,51 @@ namespace airs_controller
             return "";
         }
     };
+
+    public class Log
+    {
+        private static String log_file;
+
+        internal static void Setup()
+        {
+            // Get current directory
+            String current_directory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            // Save locations and files
+            log_file = current_directory + @"\logs\" + "AIRS_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss") + ".txt";
+
+            try
+            {
+                // Create directories
+                Directory.CreateDirectory(current_directory + @"\logs\");
+            }
+            catch (Exception e)
+            {
+                Info("An error has occured when attempting to create required directories...");
+                Error(e.ToString());
+            };
+        }
+
+        internal static bool Info(string message, string prefix = "INFO")
+        {
+            try
+            {
+                using (StreamWriter sw = File.AppendText(log_file))
+                {
+                    sw.WriteLine(DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message);
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        internal static bool Error(string message)
+        {
+            return Info(message, "ERROR");
+        }
+
+    }
 }

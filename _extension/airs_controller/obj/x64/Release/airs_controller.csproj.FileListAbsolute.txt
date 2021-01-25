@@ -3,3 +3,4 @@ F:\SteamLibrary\steamapps\common\Arma 3\@airs\airs_controller_x64.dll
 F:\SteamLibrary\steamapps\common\Arma 3\@airs\airs_controller_x64.pdb
 P:\airs\_extension\airs_controller\obj\x64\Release\airs_controller_x64.dll
 P:\airs\_extension\airs_controller\obj\x64\Release\airs_controller_x64.pdb
+P:\airs\_extension\airs_controller\obj\x64\Release\airs_controller.csprojAssemblyReference.cache
