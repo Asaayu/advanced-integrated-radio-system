@@ -110,7 +110,7 @@ namespace airs_server
             String current_directory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
             // Save locations and files
-            log_file = current_directory + @"\logs\" + "AIRS_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss") + ".txt";
+            log_file = current_directory + @"\logs\" + "AIRS_SERVER" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss") + ".txt";
 
             try
             {
