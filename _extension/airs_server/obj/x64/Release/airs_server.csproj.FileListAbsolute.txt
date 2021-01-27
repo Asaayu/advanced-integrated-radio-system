@@ -1,0 +1,8 @@
+P:\airs\_extension\airs_server\bin\x64\Release\airs_server.dll
+P:\airs\_extension\airs_server\bin\x64\Release\airs_server.pdb
+P:\airs\_extension\airs_server\obj\x64\Release\airs_server.csprojAssemblyReference.cache
+P:\airs\_extension\airs_server\obj\x64\Release\airs_server.csproj.CoreCompileInputs.cache
+F:\SteamLibrary\steamapps\common\Arma 3\@airs\airs_server_x64.dll
+F:\SteamLibrary\steamapps\common\Arma 3\@airs\airs_server_x64.pdb
+P:\airs\_extension\airs_server\obj\x64\Release\airs_server_x64.dll
+P:\airs\_extension\airs_server\obj\x64\Release\airs_server_x64.pdb

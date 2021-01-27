@@ -7,30 +7,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace airs_client
+namespace airs_server
 {
     public class App
     {
         internal static string version = "0.0.1";
-        internal static string version_info = "Advanced Integrated Radio System - " + version;
-
+        internal static string version_info = "[SERVER] Advanced Integrated Radio System Server - " + version;
     };
 
     public class Master
     {
-        // Import console
-        [DllImport("kernel32")]
-        static extern bool AllocConsole();
-
         // Function call back stuff
         public static ExtensionCallback callback;
         public delegate int ExtensionCallback([MarshalAs(UnmanagedType.LPStr)] string name, [MarshalAs(UnmanagedType.LPStr)] string function, [MarshalAs(UnmanagedType.LPStr)] string data);
 
         // Do not remove these six lines
         #if WIN64
-            [DllExport("RVExtensionRegisterCallback", CallingConvention = CallingConvention.Winapi)]
+                [DllExport("RVExtensionRegisterCallback", CallingConvention = CallingConvention.Winapi)]
         #else
-            [DllExport("_RVExtensionRegisterCallback@4", CallingConvention = CallingConvention.Winapi)]
+                [DllExport("_RVExtensionRegisterCallback@4", CallingConvention = CallingConvention.Winapi)]
         #endif
         public static void RVExtensionRegisterCallback([MarshalAs(UnmanagedType.FunctionPtr)] ExtensionCallback func)
         {
@@ -39,30 +34,26 @@ namespace airs_client
 
         // Do not remove these six lines
         #if WIN64
-            [DllExport("RVExtensionVersion", CallingConvention = CallingConvention.Winapi)]
+                [DllExport("RVExtensionVersion", CallingConvention = CallingConvention.Winapi)]
         #else
-            [DllExport("_RVExtensionVersion@8", CallingConvention = CallingConvention.Winapi)]
+                [DllExport("_RVExtensionVersion@8", CallingConvention = CallingConvention.Winapi)]
         #endif
         public static void RvExtensionVersion(StringBuilder output, int outputSize)
         {
             // Reduce output by 1 to avoid accidental overflow
             outputSize--;
 
-            AllocConsole();
-            Console.WriteLine("Hello!");
-
             Log.Setup();
 
-            Log.Info("DLL loaded by game...");            
-
-            output.Append("AIRS VOIP - " + App.version);
+            Log.Info("DLL loaded by game...");
+            Log.Info("[SERVER] AIRS VOIP - " + App.version);
         }
 
         // Do not remove these six lines
         #if WIN64
-            [DllExport("RVExtension", CallingConvention = CallingConvention.Winapi)]
+                [DllExport("RVExtension", CallingConvention = CallingConvention.Winapi)]
         #else
-            [DllExport("_RVExtension@12", CallingConvention = CallingConvention.Winapi)]
+                [DllExport("_RVExtension@12", CallingConvention = CallingConvention.Winapi)]
         #endif
         public static void RvExtension(StringBuilder output, int outputSize, [MarshalAs(UnmanagedType.LPStr)] string function)
         {
@@ -74,21 +65,6 @@ namespace airs_client
         }
     }
 
-    public class Internal
-    {
-        internal static double[] pos_asl = new double[3];
-        internal static double[] vector_dir = new double[3];
-        internal static double[] vector_up = new double[3];
-
-        internal static bool Update(double[] pos, double[] dir, double[] up)
-        {
-            // Update variables
-            pos_asl = pos;
-            vector_dir = dir;
-            vector_up = up;
-            return true;
-        }
-    };
 
     public class Functions
     {
@@ -103,22 +79,19 @@ namespace airs_client
 
             switch (parameters[0])
             {
-                // UPDATE: Update the internal position, direction and up vectors in 3D space.
-                case "update":
+                // INFO: Show version information
+                case "preinit":
                     try
                     {
-                        double[] pos = new double[3] { double.Parse(parameters[1]), double.Parse(parameters[2]), double.Parse(parameters[3]) };
-                        double[] dir = new double[3] { double.Parse(parameters[4]), double.Parse(parameters[5]), double.Parse(parameters[6]) };
-                        double[] up = new double[3] { double.Parse(parameters[7]), double.Parse(parameters[8]), double.Parse(parameters[9]) };
-                        Internal.Update(pos, dir, up);
+                        AIRS_Console.Setup(!bool.Parse(parameters[1]));
                     }
                     catch (Exception e)
                     {
-                        Log.Info("Error updating position, direction, and up vectors...");
+                        Log.Info("Error occurred during preinit...");
                         Log.Error(e.ToString());
                     }
                     return "";
-
+                    
                 // INFO: Show version information
                 case "info":
                     return App.version_info;
@@ -155,9 +128,13 @@ namespace airs_client
         {
             try
             {
+                string final_message = DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message;
+                if (AIRS_Console.console_open)
+                    Console.WriteLine(final_message);
+
                 using (StreamWriter sw = File.AppendText(log_file))
                 {
-                    sw.WriteLine(DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message);
+                    sw.WriteLine(final_message);
                 }
                 return true;
             }
@@ -170,6 +147,39 @@ namespace airs_client
         internal static bool Error(string message)
         {
             return Info(message, "ERROR");
+        }
+
+    }
+
+    public class AIRS_Console
+    {
+        internal static bool console_open;
+
+        // Import console
+        [DllImport("kernel32")]
+        static extern bool AllocConsole();
+
+        internal static bool Setup(bool dedicated_server)
+        {
+            if (dedicated_server)
+            {
+                console_open = true;
+
+                AllocConsole();
+                Console.Title = "[SERVER] AIRS VOIP - " + App.version + " | DO NOT CLOSE THIS WINDOW!!!";
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("!!! DO NOT CLOSE THIS WINDOW !!!");
+                Console.ResetColor();
+
+                Log.Info("Console opened...");
+            }
+            else
+            {
+                console_open = false;
+                Log.Info("Console stopped from opening due to local server...");
+            }
+            return true;
         }
 
     }
