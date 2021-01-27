@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "airs_controller", "airs_controller.csproj", "{A4D9879A-583D-4103-B724-D724E7790DFF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "airs_client", "airs_client.csproj", "{A4D9879A-583D-4103-B724-D724E7790DFF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

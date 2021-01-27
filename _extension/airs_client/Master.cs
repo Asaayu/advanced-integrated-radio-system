@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace airs_controller
+namespace airs_client
 {
     public class App
     {
