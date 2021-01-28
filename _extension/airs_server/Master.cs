@@ -12,7 +12,8 @@ namespace airs_server
     public class App
     {
         internal static string version = "0.0.1";
-        internal static string version_info = "[SERVER] Advanced Integrated Radio System Server - " + version;
+        internal static string version_info = "[SERVER] Advanced Integrated Radio System - " + version;
+        internal static bool airs_debug;
     };
 
     public class Master
@@ -45,7 +46,8 @@ namespace airs_server
 
             Log.Setup();
 
-            Log.Info("DLL loaded by game...");
+            AIRS_Console.Setup(Environment.CommandLine.Contains("-airs_debug"));
+
             Log.Info("[SERVER] AIRS VOIP - " + App.version);
         }
 
@@ -65,7 +67,6 @@ namespace airs_server
         }
     }
 
-
     public class Functions
     {
         internal static string Main(string input)
@@ -79,18 +80,9 @@ namespace airs_server
 
             switch (parameters[0])
             {
-                // INFO: Show version information
-                case "preinit":
-                    try
-                    {
-                        AIRS_Console.Setup(!bool.Parse(parameters[1]));
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Info("Error occurred during preinit...");
-                        Log.Error(e.ToString());
-                    }
-                    return "";
+                // INIT: Called when the game first loads
+                case "init":
+                    return "true";
                     
                 // INFO: Show version information
                 case "info":
@@ -129,7 +121,7 @@ namespace airs_server
             try
             {
                 string final_message = DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message;
-                if (AIRS_Console.console_open)
+                if (App.airs_debug)
                     Console.WriteLine(final_message);
 
                 using (StreamWriter sw = File.AppendText(log_file))
@@ -148,23 +140,27 @@ namespace airs_server
         {
             return Info(message, "ERROR");
         }
-
+        
+        internal static bool Debug(string message)
+        {
+            if (App.airs_debug)
+            {
+                return Info(message, "DEBUG");
+            };
+            return false;
+        }
     }
 
     public class AIRS_Console
     {
-        internal static bool console_open;
-
-        // Import console
         [DllImport("kernel32")]
         static extern bool AllocConsole();
 
-        internal static bool Setup(bool dedicated_server)
+        internal static bool Setup(bool debug_console)
         {
-            if (dedicated_server)
+            App.airs_debug = debug_console;
+            if (debug_console)
             {
-                console_open = true;
-
                 AllocConsole();
                 Console.Title = "[SERVER] AIRS VOIP - " + App.version + " | DO NOT CLOSE THIS WINDOW!!!";
 
@@ -172,12 +168,7 @@ namespace airs_server
                 Console.WriteLine("!!! DO NOT CLOSE THIS WINDOW !!!");
                 Console.ResetColor();
 
-                Log.Info("Console opened...");
-            }
-            else
-            {
-                console_open = false;
-                Log.Info("Console stopped from opening due to local server...");
+                Log.Info("'-airs_debug' parameter found, opening live log console");
             }
             return true;
         }

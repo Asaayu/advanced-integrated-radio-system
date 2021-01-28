@@ -13,15 +13,11 @@ namespace airs_client
     {
         internal static string version = "0.0.1";
         internal static string version_info = "Advanced Integrated Radio System - " + version;
-
+        internal static bool airs_debug;
     };
 
     public class Master
     {
-        // Import console
-        [DllImport("kernel32")]
-        static extern bool AllocConsole();
-
         // Function call back stuff
         public static ExtensionCallback callback;
         public delegate int ExtensionCallback([MarshalAs(UnmanagedType.LPStr)] string name, [MarshalAs(UnmanagedType.LPStr)] string function, [MarshalAs(UnmanagedType.LPStr)] string data);
@@ -48,14 +44,11 @@ namespace airs_client
             // Reduce output by 1 to avoid accidental overflow
             outputSize--;
 
-            AllocConsole();
-            Console.WriteLine("Hello!");
-
             Log.Setup();
 
-            Log.Info("DLL loaded by game...");            
+            AIRS_Console.Setup(Environment.CommandLine.Contains("-airs_debug"));
 
-            output.Append("AIRS VOIP - " + App.version);
+            Log.Info("AIRS VOIP - " + App.version);
         }
 
         // Do not remove these six lines
@@ -74,22 +67,6 @@ namespace airs_client
         }
     }
 
-    public class Internal
-    {
-        internal static double[] pos_asl = new double[3];
-        internal static double[] vector_dir = new double[3];
-        internal static double[] vector_up = new double[3];
-
-        internal static bool Update(double[] pos, double[] dir, double[] up)
-        {
-            // Update variables
-            pos_asl = pos;
-            vector_dir = dir;
-            vector_up = up;
-            return true;
-        }
-    };
-
     public class Functions
     {
         internal static string Main(string input)
@@ -103,21 +80,9 @@ namespace airs_client
 
             switch (parameters[0])
             {
-                // UPDATE: Update the internal position, direction and up vectors in 3D space.
-                case "update":
-                    try
-                    {
-                        double[] pos = new double[3] { double.Parse(parameters[1]), double.Parse(parameters[2]), double.Parse(parameters[3]) };
-                        double[] dir = new double[3] { double.Parse(parameters[4]), double.Parse(parameters[5]), double.Parse(parameters[6]) };
-                        double[] up = new double[3] { double.Parse(parameters[7]), double.Parse(parameters[8]), double.Parse(parameters[9]) };
-                        Internal.Update(pos, dir, up);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Info("Error updating position, direction, and up vectors...");
-                        Log.Error(e.ToString());
-                    }
-                    return "";
+                // INIT: Called when the game first loads
+                case "init":
+                    return "true";
 
                 // INFO: Show version information
                 case "info":
@@ -155,9 +120,13 @@ namespace airs_client
         {
             try
             {
+                string final_message = DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message;
+                if (App.airs_debug)
+                    Console.WriteLine(final_message);
+
                 using (StreamWriter sw = File.AppendText(log_file))
                 {
-                    sw.WriteLine(DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message);
+                    sw.WriteLine(final_message);
                 }
                 return true;
             }
@@ -170,6 +139,38 @@ namespace airs_client
         internal static bool Error(string message)
         {
             return Info(message, "ERROR");
+        }
+
+        internal static bool Debug(string message)
+        {
+            if (App.airs_debug)
+            {
+                return Info(message, "DEBUG");
+            };
+            return false;
+        }
+    }
+
+    public class AIRS_Console
+    {
+        [DllImport("kernel32")]
+        static extern bool AllocConsole();
+
+        internal static bool Setup(bool debug_console)
+        {
+            App.airs_debug = debug_console;
+            if (debug_console)
+            {
+                AllocConsole();
+                Console.Title = "AIRS VOIP - " + App.version + " | DO NOT CLOSE THIS WINDOW!!!";
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("!!! DO NOT CLOSE THIS WINDOW !!!");
+                Console.ResetColor();
+
+                Log.Info("'-airs_debug' parameter found, opening live log console");
+            }
+            return true;
         }
 
     }
