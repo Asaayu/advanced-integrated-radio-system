@@ -1,4 +1,4 @@
-name = "Advanced Integrated Radio System";
+name = "Advanced Integrated Radio System (AIRS)";
 description = "Advanced Integrated Radio System (AIRS) is an integrated radio system for Arma 3.";
 author= "Asaayu";
 
@@ -9,8 +9,8 @@ logoSmall = "\airs\main_f_airs\data\logo_small_ca.paa";
 
 dlccolor[] = {0,0.5,0,1};
 
-tooltip = "Advanced Integrated Radio System";
-tooltipOwned = "Advanced Integrated Radio System";
+tooltip = "Advanced Integrated Radio System (AIRS)";
+tooltipOwned = "Advanced Integrated Radio System (AIRS)";
 overview = "Advanced Integrated Radio System (AIRS) is an integrated radio system for Arma 3.";
 
 actionName = "Workshop";

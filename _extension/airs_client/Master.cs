@@ -74,6 +74,9 @@ namespace airs_client
             // Split on the spacers, in this case ":"
             String[] parameters = input.Split(':');
 
+            // Debug funtion called
+            Log.Debug($"Calling '{input}'");
+
             // Make sure there is at least one parameter
             if (parameters.Length <= 0)
                 return "";
@@ -83,6 +86,10 @@ namespace airs_client
                 // INIT: Called when the game first loads
                 case "init":
                     return "true";
+                    
+                // LOG: Called when the game wants to log to the debug log
+                case "LOG":
+                    return Log.Info(parameters[1]).ToString();
 
                 // INFO: Show version information
                 case "info":
@@ -120,13 +127,12 @@ namespace airs_client
         {
             try
             {
-                string final_message = DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message;
                 if (App.airs_debug)
-                    Console.WriteLine(final_message);
+                    Console.WriteLine(DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[CLIENT]" + "[" + prefix + "] " + message);
 
                 using (StreamWriter sw = File.AppendText(log_file))
                 {
-                    sw.WriteLine(final_message);
+                    sw.WriteLine(DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message);
                 }
                 return true;
             }

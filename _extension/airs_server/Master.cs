@@ -74,6 +74,9 @@ namespace airs_server
             // Split on the spacers, in this case ":"
             String[] parameters = input.Split(':');
 
+            // Debug funtion called
+            Log.Debug($"Calling '{input}'");
+
             // Make sure there is at least one parameter
             if (parameters.Length <= 0)
                 return "";
@@ -120,13 +123,12 @@ namespace airs_server
         {
             try
             {
-                string final_message = DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message;
                 if (App.airs_debug)
-                    Console.WriteLine(final_message);
+                    Console.WriteLine(DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[SERVER]" + "[" + prefix + "] " + message);
 
                 using (StreamWriter sw = File.AppendText(log_file))
                 {
-                    sw.WriteLine(final_message);
+                    sw.WriteLine(DateTime.Now.ToString("[dd/MM/yyyy hh:mm:ss tt]") + "[" + prefix + "] " + message);
                 }
                 return true;
             }

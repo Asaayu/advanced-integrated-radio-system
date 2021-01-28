@@ -12,12 +12,18 @@ class cfgpatches
 		requiredAddons[] = { "A3_Functions_F", "main_f_airs"};
 	};
 };
-
+class extended_preStart_eventhandlers
+{
+	class airs_preStart_event
+	{
+		init = "call compile preprocessFileLineNumbers '\airs\functions_f_airs\XEH\XEH_prestart.sqf'";
+	};
+};
 class extended_preinit_eventhandlers
 {
 	class airs_preinit_event
 	{
-		init = "call compile preprocessFileLineNumbers '\airs\functions_f_airs\XEH_preInit.sqf'";
+		init = "call compile preprocessFileLineNumbers '\airs\functions_f_airs\XEH\XEH_preinit.sqf'";
 	};
 };
 
