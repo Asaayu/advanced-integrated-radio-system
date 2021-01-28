@@ -12,8 +12,8 @@
 			<English>AIRS Extension Loading Error. (#31627)</English>
 		</Key>
 		<Key ID="STR_AIRS_LOADING_ERROR_EXTENSION_DESCRIPTION">
-			<Original>Advanced Integrated Radio System (AIRS) could not load the extension. Check the newest diagnostic report (.RPT) file in "%localappdata%/Arma 3" for more information about what caused this issue. If you continue to run the game without the extension, you will encounter many errors that cause instability. You will need to restart your game to fix this issue.</Original>
-			<English>Advanced Integrated Radio System (AIRS) could not load the extension. Check the newest diagnostic report (.RPT) file in "%localappdata%/Arma 3" for more information about what caused this issue. If you continue to run the game without the extension, you will encounter many errors that cause instability. You will need to restart your game to fix this issue.</English>
+			<Original>Advanced Integrated Radio System (AIRS) could not load an extension. Check the newest diagnostic report (.RPT) file in "%localappdata%/Arma 3" for more information about what caused this issue. If you continue to run the game without the extension avaliable, you will encounter many errors that cause instability. You will need to restart your game to fix this issue.</Original>
+			<English>Advanced Integrated Radio System (AIRS) could not load an extension. Check the newest diagnostic report (.RPT) file in "%localappdata%/Arma 3" for more information about what caused this issue. If you continue to run the game without the extension avaliable, you will encounter many errors that cause instability. You will need to restart your game to fix this issue.</English>
 		</Key>
 	</Package>
 	<Package name="Settings">

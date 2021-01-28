@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using NAudio;
 
 namespace airs_server
 {
@@ -63,7 +64,11 @@ namespace airs_server
             outputSize--;
 
             // Send input to switch function
-            output.Append(Functions.Main(function));
+            string return_string = Functions.Main(function);
+            Log.Debug($"Function call: '{function}', returned '{return_string}'");
+
+            // Return output to Arma 3
+            output.Append(return_string);
         }
     }
 
@@ -73,9 +78,6 @@ namespace airs_server
         {
             // Split on the spacers, in this case ":"
             String[] parameters = input.Split(':');
-
-            // Debug funtion called
-            Log.Debug($"Calling '{input}'");
 
             // Make sure there is at least one parameter
             if (parameters.Length <= 0)

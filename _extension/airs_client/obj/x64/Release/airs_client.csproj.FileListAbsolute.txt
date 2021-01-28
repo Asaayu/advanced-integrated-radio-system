@@ -8,3 +8,4 @@ P:\airs\_extension\airs_client\obj\x64\Release\airs_client.csprojAssemblyReferen
 P:\airs\_extension\airs_client\obj\x64\Release\airs_client.csproj.CoreCompileInputs.cache
 P:\airs\_extension\airs_client\obj\x64\Release\airs_client_x64.dll
 P:\airs\_extension\airs_client\obj\x64\Release\airs_client_x64.pdb
+P:\airs\_extension\airs_client\obj\x64\Release\airs_client.csproj.CopyComplete
