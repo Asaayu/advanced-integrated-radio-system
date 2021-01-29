@@ -1,8 +1,8 @@
 // Push To talk
 [
-	localize "STR_AIRS_MOD_TITLE",
+	"STR_AIRS_MOD_TITLE",
 	"airs_ptt",
-	localize "STR_AIRS_SETTINGS_ENABLE_TITLE",
+	"STR_AIRS_SETTINGS_ENABLE_TITLE",
 	{
 		systemChat "PTT down";
 	},

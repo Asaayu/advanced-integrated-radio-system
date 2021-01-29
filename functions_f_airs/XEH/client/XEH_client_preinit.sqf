@@ -28,7 +28,6 @@ addMissionEventHandler ["ExtensionCallback",
 
 	if (_name == "AIRS_VOIP") then
 	{
-		[format["ExtensionCallback: '%1'", _function], true] call AIRS_fnc_log;
 		_this call AIRS_fnc_callback;
 	};
 }];

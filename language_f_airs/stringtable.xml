@@ -25,33 +25,33 @@
 			<Original>Voice Settings</Original>
 			<English>Voice Settings</English>
 		</Key>
-		<Key ID="STR_AIRS_SETTINGS_ADD_PTT_TITLE">
-			<Original>Additional PTT Settings</Original>
-			<English>Additional PTT Settings</English>
+		<Key ID="STR_AIRS_SETTINGS_MICROPHONE_TITLE">
+			<Original>Microphone Settings</Original>
+			<English>Microphone Settings</English>
 		</Key>
-		<Key ID="STR_AIRS_SETTINGS_ENABLE_TITLE">
-			<Original>Toggle Mod</Original>
-			<English>Toggle Mod</English>
-		</Key>
-		<Key ID="STR_AIRS_SETTINGS_ENABLE_TOOLTIP">
-			<Original>Enable/Disable the Advanced Integrated Radio System.</Original>
-			<English>Enable/Disable the Advanced Integrated Radio System.</English>
+		<Key ID="STR_AIRS_SETTINGS_OTHER_TITLE">
+			<Original>Misc. Settings</Original>
+			<English>Misc. Settings</English>
 		</Key>
 		<Key ID="STR_AIRS_SETTINGS_INPUT_DEVICE_TITLE">
-			<Original>VOIP Input Device</Original>
-			<English>VOIP Input Device</English>
+			<Original>Input Device</Original>
+			<English>Input Device</English>
 		</Key>
 		<Key ID="STR_AIRS_SETTINGS_INPUT_DEVICE_TOOLTIP">
-			<Original>The device which will be used as the input device. The avaliable options for this setting is only updated when the game is restarted.</Original>
-			<English>The device which will be used as the input device. The avaliable options for this setting is only updated when the game is restarted.</English>
+			<Original>This is the device which will be used as the input device for audio.\nTo change this setting go to the Windows Sound Control Panel, select the 'Recording' tab, then select and set the desired device as the 'Default Communication Device'.\nChanges to the default device may cause issues if the game is not restarted.</Original>
+			<English>This is the device which will be used as the input device for audio.\nTo change this setting go to the Windows Sound Control Panel, select the 'Recording' tab, then select and set the desired device as the 'Default Communication Device'.\nChanges to the default device may cause issues if the game is not restarted.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_INPUT_DEVICE_NONE">
+			<Original>No device found</Original>
+			<English>No device found</English>
 		</Key>
 		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_TITLE">
 			<Original>Transmission Mode</Original>
 			<English>Transmission Mode</English>
 		</Key>
 		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_TOOLTIP">
-			<Original>How your direct 3D audio will be transmitted.\nPush-To-Talk - Voice data is only transmitted when your PTT key is pressed.\nVoice Activation Detection - Automatically transmit voice data when audio passes the defined volume gate.\nContinuous Transmission - Voice data is continuously transmitted.</Original>
-			<English>How your direct 3D audio will be transmitted.\nPush-To-Talk - Voice data is only transmitted when your PTT key is pressed.\nVoice Activation Detection - Automatically transmit voice data when audio passes the defined volume gate.\nContinuous Transmission - Voice data is continuously transmitted.</English>
+			<Original>How your direct 3D audio will be transmitted.\nPush-To-Talk - Voice data is only transmitted when your PTT key is pressed.\nVoice Activation Detection - Automatically transmit voice data when audio passes the defined volume gate.\nContinuous Transmission - All voice data will be continously transmitted even if you are not speaking.</Original>
+			<English>How your direct 3D audio will be transmitted.\nPush-To-Talk - Voice data is only transmitted when your PTT key is pressed.\nVoice Activation Detection - Automatically transmit voice data when audio passes the defined volume gate.\nContinuous Transmission - All voice data will be continously transmitted even if you are not speaking.</English>
 		</Key>
 		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_PTT">
 			<Original>Push-To-Talk</Original>
@@ -65,13 +65,45 @@
 			<Original>Continuous Transmission</Original>
 			<English>Continuous Transmission</English>
 		</Key>
-		<Key ID="STR_AIRS_SETTINGS_NO_DEVICES_FOUND_TITLE">
-			<Original>No input devices found</Original>
-			<English>No input devices found</English>
+		<Key ID="STR_AIRS_SETTINGS_VOLUME_GATE_TITLE">
+			<Original>Volume Gate</Original>
+			<English>Volume Gate</English>
 		</Key>
-		<Key ID="STR_AIRS_SETTINGS_NO_DEVICES_FOUND_TOOLTIP">
-			<Original>Make sure that your input device is enabled in you Windows sound control panel. If the input device is still missing, make sure all required drivers and software is installed.</Original>
-			<English>Make sure that your input device is enabled in you Windows sound control panel. If the input device is still missing, make sure all required drivers and software is installed.</English>
+		<Key ID="STR_AIRS_SETTINGS_VOLUME_GATE_TOOLTIP">
+			<Original>When using Voice Activation Detection or if specifically enabled for Push-To-Talk, audio data will only be transmitted if the volume of the audio is above the value set in the Volume Gate slider.</Original>
+			<English>When using Voice Activation Detection or if specifically enabled for Push-To-Talk, audio data will only be transmitted if the volume of the audio is above the value set in the Volume Gate slider.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_MIC_VOLUME_TITLE">
+			<Original>Microphone Volume</Original>
+			<English>Microphone Volume</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_MIC_VOLUME_TOOLTIP">
+			<Original>Increase or decrease the volume of your microphone, this effect is applied before the volume is checked against the volume gate.</Original>
+			<English>Increase or decrease the volume of your microphone, this effect is applied before the volume is checked against the volume gate.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_LOCAL_PLAYBACK_TITLE">
+			<Original>Local Microphone Playback</Original>
+			<English>Local Microphone Playback</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_LOCAL_PLAYBACK_TOOLTIP">
+			<Original>Play the incoming audio from your input device back through your speakers.\nIf playing without headphones this may cause a feedback loop between your speakers and microphone.</Original>
+			<English>Play the incoming audio from your input device back through your speakers.\nIf playing without headphones this may cause a feedback loop between your speakers and microphone.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_RANDOMLIP_TITLE">
+			<Original>Lip Movement</Original>
+			<English>Lip Movement</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_RANDOMLIP_TOOLTIP">
+			<Original>Units that are speaking will continuously move their lips as if they are talking to simulate lip syncing between the audio and the unit's mouth.\nWill also make it easier to distinguish who is talking in a group.</Original>
+			<English>Units that are speaking will continuously move their lips as if they are talking to simulate lip syncing between the audio and the unit's mouth.\nWill also make it easier to distinguish who is talking in a group.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_PTT_RELEASE_TITLE">
+			<Original>Push-To-Talk Release Delay</Original>
+			<English>Push-To-Talk Release Delay</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_PTT_RELEASE_TOOLTIP">
+			<Original>Delay the ending of transmitting audio when the Push-To-Talk key is released.</Original>
+			<English>Delay the ending of transmitting audio when the Push-To-Talk key is released.</English>
 		</Key>
 	</Package>
 	<Package name="Keybinds">

@@ -16,7 +16,7 @@ class cfgfunctions
 		class airs_callbacks
 		{
 		        file = "\airs\functions_f_airs\functions\callbacks";
-			class populate_devices {};
+			class set_device {};
 		};
 	};
 };

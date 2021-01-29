@@ -13,6 +13,6 @@ if (("airs_server" callExtension "info") == "") exitWith
 };
 
 // Currently the 3DEN editor is not supported
-if (is3DEN || is3DENMultiplayer) exitWith { "airs_client" callExtension "log:User opened 3den mission, client 'XEH_preinit' executed halted."; };
+if (is3DEN || is3DENMultiplayer) exitWith { "airs_client" callExtension "log:User opened 3den mission, client 'XEH_server_preinit' executed halted."; };
 
 diag_log "server started";

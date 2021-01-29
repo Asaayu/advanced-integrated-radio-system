@@ -7,9 +7,9 @@ params
 
 switch (tolower _function) do
 {
-	case "airs_fnc_populate_devices":
+	case "airs_fnc_set_device":
 	{
-		_data call AIRS_fnc_populate_devices;
+		_data call AIRS_fnc_set_device;
 	};
 	default
 	{
