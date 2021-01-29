@@ -1,12 +1,13 @@
 ﻿using RGiesecke.DllExport;
 using System;
 using System.Runtime.InteropServices;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.IO;
-using NAudio;
+using System.Net;
+using System.Net.Sockets;
+using NAudio.Wave;
+using NetworkChat;
 
 namespace airs_client
 {
@@ -85,10 +86,19 @@ namespace airs_client
 
             switch (parameters[0])
             {
-                // INIT: Called when the game first loads
-                case "init":
+                // PREINIT: Called when a mission starts
+                case "preinit":
+                    UpdateDevicesList();
                     return "true";
-                    
+
+                // SETUP: Called when the game starts
+                case "setup":
+                    return Setup();
+
+                // DEBUG: Called when the game wants to log debug information to the debug log
+                case "debug":
+                    return Log.Debug(parameters[1]).ToString();
+
                 // LOG: Called when the game wants to log to the debug log
                 case "log":
                     return Log.Info(parameters[1]).ToString();
@@ -99,7 +109,46 @@ namespace airs_client
             }
             return "";
         }
+
+        private static string Setup()
+        {
+            // Populate the options setting with input devices
+            UpdateDevicesList();
+
+            //NetworkAudioSender networkAudioSender = new NetworkAudioSender(codec, );
+
+
+            return "";
+        }
+        
+        private static string UpdateDevicesList()
+        {
+            // Populate the options setting with input devices
+            for (int i = 0; i < WaveIn.DeviceCount; i++)
+            {
+                var capabilities = WaveIn.GetCapabilities(i);
+                Master.callback.Invoke("AIRS_VOIP", "airs_fnc_populate_devices", $"{i}{capabilities.ProductName}");
+                Log.Debug($"Callback invoke: '{i}{capabilities.ProductName}'");
+            }
+            //NetworkAudioSender networkAudioSender = new NetworkAudioSender(codec, );
+
+
+            return "";
+        }
     };
+
+    class VOIP
+    {
+        private readonly INetworkChatCodec codec;
+        private readonly IAudioSender audioSender;
+        private readonly WaveIn waveIn;
+
+        private static string Setup()
+        {
+            return "";
+        }
+
+    }
 
     public class Log
     {
@@ -181,5 +230,150 @@ namespace airs_client
             return true;
         }
 
+    }    
+}
+
+namespace NetworkChat
+{
+    public interface INetworkChatCodec : IDisposable
+    {
+        /// <summary>
+        /// Friendly Name for this codec
+        /// </summary>
+        string Name { get; }
+        /// <summary>
+        /// Tests whether the codec is available on this system
+        /// </summary>
+        bool IsAvailable { get; }
+        /// <summary>
+        /// Bitrate
+        /// </summary>
+        int BitsPerSecond { get; }
+        /// <summary>
+        /// Preferred PCM format for recording in (usually 8kHz mono 16 bit)
+        /// </summary>
+        WaveFormat RecordFormat { get; }
+        /// <summary>
+        /// Encodes a block of audio
+        /// </summary>
+        byte[] Encode(byte[] data, int offset, int length);
+        /// <summary>
+        /// Decodes a block of audio
+        /// </summary>
+        byte[] Decode(byte[] data, int offset, int length);
+    }
+
+    interface IAudioSender : IDisposable
+    {
+        void Send(byte[] payload);
+    }
+
+    interface IAudioReceiver : IDisposable
+    {
+        void OnReceived(Action<byte[]> handler);
+    }
+
+    class UdpAudioSender : IAudioSender
+    {
+        private readonly UdpClient udpSender;
+        public UdpAudioSender(IPEndPoint endPoint)
+        {
+            udpSender = new UdpClient();
+            udpSender.Connect(endPoint);
+        }
+
+        public void Send(byte[] payload)
+        {
+            udpSender.Send(payload, payload.Length);
+        }
+
+        public void Dispose()
+        {
+            udpSender?.Close();
+        }
+    }
+
+    class UdpAudioReceiver : IAudioReceiver
+    {
+        private Action<byte[]> handler;
+        private readonly UdpClient udpListener;
+        private bool listening;
+
+        public UdpAudioReceiver(int portNumber)
+        {
+            var endPoint = new IPEndPoint(IPAddress.Loopback, portNumber);
+
+            udpListener = new UdpClient();
+
+            // To allow us to talk to ourselves for test purposes:
+            // http://stackoverflow.com/questions/687868/sending-and-receiving-udp-packets-between-two-programs-on-the-same-computer
+            udpListener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            udpListener.Client.Bind(endPoint);
+
+            ThreadPool.QueueUserWorkItem(ListenerThread, endPoint);
+            listening = true;
+        }
+
+        private void ListenerThread(object state)
+        {
+            var endPoint = (IPEndPoint)state;
+            try
+            {
+                while (listening)
+                {
+                    byte[] b = udpListener.Receive(ref endPoint);
+                    handler?.Invoke(b);
+                }
+            }
+            catch (SocketException)
+            {
+                // usually not a problem - just means we have disconnected
+            }
+        }
+
+        public void Dispose()
+        {
+            listening = false;
+            udpListener?.Close();
+        }
+
+        public void OnReceived(Action<byte[]> onAudioReceivedAction)
+        {
+            handler = onAudioReceivedAction;
+        }
+    }
+
+    class NetworkAudioSender : IDisposable
+    {
+        private readonly INetworkChatCodec codec;
+        private readonly IAudioSender audioSender;
+        private readonly WaveIn waveIn;
+
+        public NetworkAudioSender(INetworkChatCodec codec, int inputDeviceNumber, IAudioSender audioSender)
+        {
+            this.codec = codec;
+            this.audioSender = audioSender;
+            waveIn = new WaveIn();
+            waveIn.BufferMilliseconds = 50;
+            waveIn.DeviceNumber = inputDeviceNumber;
+            waveIn.WaveFormat = codec.RecordFormat;
+            waveIn.DataAvailable += OnAudioCaptured;
+            //waveIn.StartRecording();
+        }
+
+        void OnAudioCaptured(object sender, WaveInEventArgs e)
+        {
+            byte[] encoded = codec.Encode(e.Buffer, 0, e.BytesRecorded);
+            audioSender.Send(encoded);
+        }
+
+        public void Dispose()
+        {
+            waveIn.DataAvailable -= OnAudioCaptured;
+            waveIn.StopRecording();
+            waveIn.Dispose();
+            waveIn?.Dispose();
+            audioSender?.Dispose();
+        }
     }
 }

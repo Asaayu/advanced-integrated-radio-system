@@ -85,14 +85,30 @@ namespace airs_server
 
             switch (parameters[0])
             {
-                // INIT: Called when the game first loads
-                case "init":
-                    return "true";
-                    
+                // PREINIT: Called when a mission starts
+                case "preinit":
+                    return Preinit();
+
+                // SETUP: Called when a mission starts
+                case "setup":
+                    return Setup();
+
                 // INFO: Show version information
                 case "info":
                     return App.version_info;
             }
+            return "";
+        }
+
+        internal static string Setup()
+        {
+
+            return "";
+        }
+        
+        internal static string Preinit()
+        {
+
             return "";
         }
     };

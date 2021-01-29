@@ -22,4 +22,15 @@ if (("airs_client" callExtension "info") == "") exitWith
 	};
 };
 
-diag_log "client started";
+addMissionEventHandler ["ExtensionCallback",
+{
+	params [["_name","",[""]], ["_function","",[""]], ["_data","",[""]]];
+
+	if (_name == "AIRS_VOIP") then
+	{
+		[format["ExtensionCallback: '%1'", _function], true] call AIRS_fnc_log;
+		_this call AIRS_fnc_callback;
+	};
+}];
+
+"airs_client" callExtension "preinit";

@@ -14,6 +14,22 @@
 	}
 ] call CBA_fnc_addSetting;
 
+// Input devices
+[
+	"airs_input_device",
+	"LIST",
+	["STR_AIRS_SETTINGS_INPUT_DEVICE_TITLE","STR_AIRS_SETTINGS_INPUT_DEVICE_TOOLTIP"],
+	["STR_AIRS_MOD_TITLE", "STR_AIRS_SETTINGS_MAIN_TITLE"],
+	[[-1],["STR_AIRS_SETTINGS_NO_DEVICES_FOUND_TITLE"], 0],
+	2,
+	{
+		params ["_value"];
+		profileNamespace setVariable ["airs_input_device",_value];
+		saveProfileNamespace;
+	},
+	true
+] call CBA_fnc_addSetting;
+
 // Transmission mode
 [
 	"airs_transmission_mode",
@@ -25,5 +41,6 @@
 	{
 		params ["_value"];
 		profileNamespace setVariable ["airs_transmission_mode",_value];
+		saveProfileNamespace;
 	}
 ] call CBA_fnc_addSetting;

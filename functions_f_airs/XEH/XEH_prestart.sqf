@@ -5,3 +5,5 @@ if (("airs_client" callExtension "info") == "") exitWith
 {
 	diag_log "!!! Advanced Integrated Radio System (AIRS) extension was not found. !!!";
 };
+
+"airs_client" callExtension "setup";

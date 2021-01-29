@@ -37,6 +37,14 @@
 			<Original>Enable/Disable the Advanced Integrated Radio System.</Original>
 			<English>Enable/Disable the Advanced Integrated Radio System.</English>
 		</Key>
+		<Key ID="STR_AIRS_SETTINGS_INPUT_DEVICE_TITLE">
+			<Original>VOIP Input Device</Original>
+			<English>VOIP Input Device</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_INPUT_DEVICE_TOOLTIP">
+			<Original>The device which will be used as the input device. The avaliable options for this setting is only updated when the game is restarted.</Original>
+			<English>The device which will be used as the input device. The avaliable options for this setting is only updated when the game is restarted.</English>
+		</Key>
 		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_TITLE">
 			<Original>Transmission Mode</Original>
 			<English>Transmission Mode</English>
@@ -56,6 +64,14 @@
 		<Key ID="STR_AIRS_SETTINGS_TRANSMISSION_CT">
 			<Original>Continuous Transmission</Original>
 			<English>Continuous Transmission</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_NO_DEVICES_FOUND_TITLE">
+			<Original>No input devices found</Original>
+			<English>No input devices found</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_NO_DEVICES_FOUND_TOOLTIP">
+			<Original>Make sure that your input device is enabled in you Windows sound control panel. If the input device is still missing, make sure all required drivers and software is installed.</Original>
+			<English>Make sure that your input device is enabled in you Windows sound control panel. If the input device is still missing, make sure all required drivers and software is installed.</English>
 		</Key>
 	</Package>
 	<Package name="Keybinds">
