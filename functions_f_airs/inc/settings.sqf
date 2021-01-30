@@ -1,16 +1,39 @@
 // MAIN
-/*
 [
-	"airs_input_device",
+	"airs_playback_volume",
+	"SLIDER",
+	["STR_AIRS_SETTINGS_OUTPUT_VOLUME_TITLE","STR_AIRS_SETTINGS_OUTPUT_VOLUME_TOOLTIP"],
+	["STR_AIRS_MOD_TITLE", "STR_AIRS_SETTINGS_MAIN_TITLE"],
+	[0, 1, 1, 1],
+	2,
+	{
+		params ["_value"];
+		"airs_client" callExtension format["set_output_volume:%1",_value];
+	}
+] call CBA_fnc_addSetting;
+[
+	"airs_output_device",
 	"LIST",
-	["STR_AIRS_SETTINGS_INPUT_DEVICE_TITLE","STR_AIRS_SETTINGS_INPUT_DEVICE_TOOLTIP"],
+	["STR_AIRS_SETTINGS_OUTPUT_DEVICE_TITLE","STR_AIRS_SETTINGS_OUTPUT_DEVICE_TOOLTIP"],
 	["STR_AIRS_MOD_TITLE", "STR_AIRS_SETTINGS_MAIN_TITLE"],
 	[[-1],["STR_AIRS_SETTINGS_INPUT_DEVICE_NONE"], 0],
 	2,
 	{},
 	true
 ] call CBA_fnc_addSetting;
-*/
+[
+	"airs_notification_volume",
+	"SLIDER",
+	["STR_AIRS_SETTINGS_NOTIFICATION_VOLUME_TITLE","STR_AIRS_SETTINGS_NOTIFICATION_VOLUME_TOOLTIP"],
+	["STR_AIRS_MOD_TITLE", "STR_AIRS_SETTINGS_MAIN_TITLE"],
+	[0, 1, 1, 1],
+	2,
+	{
+		params ["_value"];
+		"airs_client" callExtension format["set_notification_volume:%1",_value];
+	}
+] call CBA_fnc_addSetting;
+
 // MIC
 [
 	"airs_input_device",
@@ -27,7 +50,7 @@
 	"SLIDER",
 	["STR_AIRS_SETTINGS_MIC_VOLUME_TITLE","STR_AIRS_SETTINGS_MIC_VOLUME_TOOLTIP"],
 	["STR_AIRS_MOD_TITLE", "STR_AIRS_SETTINGS_MICROPHONE_TITLE"],
-	[0, 3, 1, 1],
+	[0, 3, 1, 2],
 	2,
 	{
 		params ["_value"];
@@ -65,7 +88,7 @@
 	"SLIDER",
 	["STR_AIRS_SETTINGS_VOLUME_GATE_TITLE","STR_AIRS_SETTINGS_VOLUME_GATE_TOOLTIP"],
 	["STR_AIRS_MOD_TITLE", "STR_AIRS_SETTINGS_VOICE_TITLE"],
-	[0, 100, 35, 0],
+	[0, 32767, 500, 0],
 	2,
 	{
 		params ["_value"];
@@ -73,15 +96,15 @@
 	}
 ] call CBA_fnc_addSetting;
 [
-	"airs_ptt_release",
-	"SLIDER",
-	["STR_AIRS_SETTINGS_PTT_RELEASE_TITLE","STR_AIRS_SETTINGS_PTT_RELEASE_TOOLTIP"],
+	"airs_audio_click",
+	"CHECKBOX",
+	["STR_AIRS_SETTINGS_AUDIO_CLICK_TITLE","STR_AIRS_SETTINGS_AUDIO_CLICK_TOOLTIP"],
 	["STR_AIRS_MOD_TITLE", "STR_AIRS_SETTINGS_VOICE_TITLE"],
-	[0, 3, 0.3, 1],
+	false,
 	2,
 	{
 		params ["_value"];
-		"airs_client" callExtension format["set_ptt_release:%1",_value];
+		"airs_client" callExtension format["set_audio_click:%1",[0,1] select _value];
 	}
 ] call CBA_fnc_addSetting;
 

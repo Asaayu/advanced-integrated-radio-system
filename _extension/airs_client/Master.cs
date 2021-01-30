@@ -7,9 +7,10 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using NAudio.Wave;
-using NetworkChat;
 using NAudio.CoreAudioApi;
-using NAudio.Codecs;
+using NVorbis;
+using NAudio.Vorbis;
+using NetworkChat;
 using OpusDotNet;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -74,6 +75,7 @@ namespace airs_client
             // Send input to switch function
             try
             {
+                Log.Debug($"Calling: '{function}'...");
                 return_string = Functions.Main(function);
                 Log.Debug($"Function call: '{function}', returned '{return_string}'");
             }
@@ -116,12 +118,12 @@ namespace airs_client
                     VOIP.PTT(parameters[1] == "1", 2);
                     return "true";
                     
-                // SET_PTT_RELEASE: Called when the user changes the release time before ending PTT
-                case "set_ptt_release":
-                    VOIP.ptt_release = float.Parse(parameters[1]);
+                // SET_AUDIO_CLICK: Called when the user changes the aucio click setting
+                case "set_audio_click":
+                    VOIP.audio_click = parameters[1] == "1";
                     return "true";
 
-                // SET_VOICE_MODE: Called when the user switches from PTT to VAD or vice versa
+                // SET_VOICE_MODE: Called when the user switches from PTT to VAD or CT
                 case "set_voice_mode":
                     VOIP.SetVoiceMode(int.Parse(parameters[1]));
                     return "true";
@@ -140,10 +142,37 @@ namespace airs_client
                 case "set_mic_gain":
                     VOIP.mic_gain = float.Parse(parameters[1]);
                     return "true";
+                    
+                // SET_PLAYBACK_VOLUME: Called when the user changes their playback volume setting
+                case "set_output_volume":
+                    VOIP.output_volume = float.Parse(parameters[1]);
+                    if (VOIP.audio_output != null)
+                        VOIP.audio_output.Volume = VOIP.output_volume;
+                    return "true";
+                    
+                // SET_NOTIFICATION_VOLUME: Called when the user changes their notification volume setting
+                case "set_notification_volume":
+                    Audio.notification_volume = float.Parse(parameters[1]);
+                    return "true";
+
+                // SET_AUDIO_POSITION: Set where the audio is located for the notification audio
+                case "set_audio_position":
+                    Audio.SetAudioPosition(parameters[1], parameters[2]);
+                    return "true";
+
+                // TOGGLE_SPEAKERS: Called when the user mutes/unmutes the speaker output
+                case "toggle_speakers":
+                    VOIP.ToggleSpeakers();
+                    return "true";
+
+                // TOGGLE_MICROPHONE: Called when the user mutes/unmutes the microphone input
+                case "toggle_microphone":
+                    VOIP.ToggleMicrophone();
+                    return "true";
 
                 // PREINIT: Called when a mission starts
                 case "preinit":
-                    UpdateDevice();
+                    UpdateDevices();
                     return "true";
 
                 // SETUP: Called when the game starts
@@ -172,15 +201,66 @@ namespace airs_client
             return "";
         }
         
-        private static string UpdateDevice()
+        private static string UpdateDevices()
         {
-            // Put the name of the device used for audio in the options menu
+            // Put the name of the devices used for audio in the options menu
             var enumerator = new MMDeviceEnumerator();
-            string device_name = enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Communications).FriendlyName;
-            Master.callback.Invoke("AIRS_VOIP", "airs_fnc_set_device", device_name);
-            return "";
+            string input_device_name = enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Communications).FriendlyName;
+            string ouput_device_name = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console).FriendlyName;
+            Master.callback.Invoke("AIRS_VOIP", "airs_fnc_set_input_device", input_device_name);
+            Master.callback.Invoke("AIRS_VOIP", "airs_fnc_set_output_device", ouput_device_name);
+            return "true";
         }
     };
+
+    class Audio
+    {
+        internal static float notification_volume = 1.0f;
+        private static Dictionary<string, string> audio_positions = new Dictionary<string, string>();
+        internal static bool SetAudioPosition(string name, string filepath)
+        {
+            if (!filepath.StartsWith(@"\"))
+                filepath = @"\" + filepath;
+
+            string path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            path = $"{path.Remove(path.Length - 6)}{filepath}";
+            if (!File.Exists($"{path}"))
+            {
+                Log.Error($"'{path}' could not be found make sure the file exists and has the correct extension!");
+                return false;
+            }
+            audio_positions.Add(name, $"{path}");
+            Log.Info($"Added {name} to audio positions dictionary at '{path}'");
+            return true;
+        }
+
+        internal static bool PlayNotification(string name)
+        {
+            try
+            {
+                Log.Debug($"Playing notification: '{name}'");
+                string filepath = audio_positions[name];
+
+                WaveOutEvent notification_player = new WaveOutEvent();
+                notification_player.PlaybackStopped += (object sender, StoppedEventArgs e) => { notification_player.Dispose();  };
+                notification_player.Volume = notification_volume;
+                notification_player.Init(new VorbisWaveReader(filepath));
+                notification_player.Play();
+                return true;
+
+            }
+            catch (Exception e)
+            {
+                Log.Info($"'{name}' file could not be found in audio position dictionary!");
+                foreach (string i in audio_positions.Keys)
+                {
+                    Log.Debug(i);
+                }
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
+    }
 
     class VOIP
     {
@@ -188,8 +268,12 @@ namespace airs_client
         internal static bool local_playback;
         internal static int volume_gate;
         internal static float mic_gain;
+        internal static float output_volume = 1.0f;
 
-        internal static float ptt_release;
+        internal static int transmission_type;
+
+        internal static bool audio_click;
+        internal static bool audio_click_done;
 
         internal static bool microphone_muted;
         internal static bool speakers_muted;
@@ -198,7 +282,7 @@ namespace airs_client
         private static OpusDecoder decoder;
 
         private static WaveInEvent audio_input;
-        private static WaveOutEvent audio_output;
+        internal static WaveOutEvent audio_output;
 
         private static BufferedWaveProvider provider = new BufferedWaveProvider(new WaveFormat(16000, 2));
 
@@ -209,38 +293,80 @@ namespace airs_client
         {
             sender = new UdpAudioSender(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9986));
 
-
-            encoder = new OpusEncoder(Application.VoIP, 48000, 2);
+            encoder = new OpusEncoder(Application.VoIP, 16000, 2);
             decoder = new OpusDecoder();
 
-            audio_input = new WaveInEvent
-            {
-                BufferMilliseconds = 60,
-                NumberOfBuffers = 2,
-                DeviceNumber = 0,
-                WaveFormat = new WaveFormat(16000, 2)
-        };
-            audio_input.DataAvailable += OnAudioCaptured;
-
-            audio_output = new WaveOutEvent
-            {
-                DesiredLatency = 60,
-                NumberOfBuffers = 2
-            };
-            provider.DiscardOnBufferOverflow = true;
-            audio_output.Init(provider);
-            audio_output.Play();
-
+            CreateOutputEvent();
             return "true";
         }
 
-        internal static string SetVoiceMode(int mode)
+        internal static bool ToggleSpeakers()
+        {
+            if (speakers_muted)
+            {
+                // Speakers unmuted
+                CreateOutputEvent();
+                speakers_muted = false;
+
+                // Play notification
+                Audio.PlayNotification("ui_speaker_unmute");
+            }
+            else
+            {
+                // Speakers muted
+                DeleteOutputEvent();
+                speakers_muted = true;
+
+                // Play notification
+                Audio.PlayNotification("ui_speaker_mute");
+            };
+            Log.Debug($"Speakers muted: {speakers_muted}");
+
+            return speakers_muted;
+        }
+
+        internal static bool ToggleMicrophone()
+        {
+            if (microphone_muted)
+            {
+                // Play notification
+                Audio.PlayNotification("ui_mic_unmute");
+
+                // Microphone unmuted
+                switch (voice_mode)
+                {
+                    // Voice Activation Detection 
+                    case 1:
+                    // Continuous Transmission
+                    case 2:
+                        CreateInputEvent().StartRecording();
+                        break;
+                }
+                microphone_muted = false;
+            }
+            else
+            {
+                // Play notification
+                Audio.PlayNotification("ui_mic_mute");
+
+                // Microphone muted
+                DeleteInputEvent();
+                microphone_muted = true;
+            };
+            Log.Debug($"Microphone muted: {microphone_muted}");
+
+            return microphone_muted;
+        }
+
+        internal static bool SetVoiceMode(int mode)
         {
             Log.Debug($"Setting voice mode to '{mode}'");
 
-            // Stop any recording that maybe already running
-            audio_input.StopRecording();
-            PTT(false, 0);
+            // Stop any audio input
+            DeleteInputEvent();
+
+            // Reset transmission type
+            transmission_type = 0;
 
             // Start new system
             switch (mode)
@@ -248,46 +374,58 @@ namespace airs_client
                 // Push-To-Talk
                 case 0:
                     voice_mode = 0;
-                    return "true";
+                    return true;
 
                 // Voice Activation Detection
                 case 1:
                     voice_mode = 1;
-                    audio_input.StartRecording();
-                    return "true";
+                    CreateInputEvent().StartRecording();
+                    return true;
 
                 // Continuous Transmission
                 case 2:
                     voice_mode = 2;
-                    audio_input.StartRecording();
-                    return "true";
+                    CreateInputEvent().StartRecording();
+                    return true;
             }
+
             Log.Error($"Voice mode can only be Push-To-Talk (0) Voice Activation Detection (1), or Continuous Transmission (2). Incorrect value: '{mode}'");
-            return "false";
+            return false;
         }
-        internal static string PTT(bool active, int type)
+        
+        internal static bool PTT(bool active, int type)
         {
-            Log.Debug($"PTT: {active}");
+            // Stop any audio recording
+            DeleteInputEvent();
 
             if (microphone_muted || speakers_muted)
-                return "false";
+                return false;
 
             if (active)
             {
+                // Set transmission type for udp packet
+                transmission_type = type;
+
                 // Start recording audio
-                audio_input.StartRecording();
-            }
-            else
-            {
-                // Stop recording audio
-                Task.Run(() =>
-                {
-                    // Delay the end of the message by the PTT release delay
-                    Task.Delay(TimeSpan.FromSeconds(ptt_release));
-                    audio_input.StopRecording();
-                });
+                CreateInputEvent().StartRecording();
             };
-            return "true";
+
+            if (audio_click)
+            {
+                if (active)
+                {
+                    // Play notification
+                    Audio.PlayNotification("ui_ptt_start");
+                }
+                else
+                {
+                    // Play notification
+                    Audio.PlayNotification("ui_ptt_end");
+                }
+            }
+
+            Log.Debug($"PTT: {active}");
+            return active;
         }
 
         private static async void OnAudioCaptured(object sender, WaveInEventArgs e)
@@ -310,6 +448,21 @@ namespace airs_client
                         // Voice Activation Detection will need to make sure the volume is above the volume gate
                     case 1:
                         gate_passed = ApplyMicrophoneGain(e, 0, mic_gain) > volume_gate;
+                        if (audio_click)
+                        {
+                            if (gate_passed && !audio_click_done)
+                            {
+                                // Play notification
+                                Audio.PlayNotification("ui_ptt_start");
+                                audio_click_done = true;
+                            }
+                            else if (!gate_passed && audio_click_done)
+                            {
+                                // Play notification
+                                Audio.PlayNotification("ui_ptt_end");
+                                audio_click_done = false;
+                            }
+                        }
                         break;
                 };
 
@@ -323,16 +476,10 @@ namespace airs_client
                     {
                         try
                         {
+
                             // Stopping the recording in the middle causes not enough frames to be saved
                             if (e.BytesRecorded < 3840)
-                            {
-                                List<byte> holder = new List<byte>();
-                                holder.CopyTo(e.Buffer, 0);
-                                while (e.BytesRecorded < 3840)
-                                {
-                                    holder.Add(0);
-                                }
-                            }
+                                return;
                             
                             // Encode the bytes in the Opus codec
                             byte[] encoded_bytes = new byte[e.BytesRecorded];
@@ -383,6 +530,56 @@ namespace airs_client
             
             return max;
         }
+        
+        private static WaveInEvent CreateInputEvent()
+        {
+            // Create new input event
+            audio_input = new WaveInEvent
+            {
+                BufferMilliseconds = 60,
+                NumberOfBuffers = 2,
+                DeviceNumber = 0,
+                WaveFormat = new WaveFormat(16000, 2)
+            };
+            audio_input.DataAvailable += OnAudioCaptured;
+            return audio_input;
+        }   
+
+        private static WaveOutEvent CreateOutputEvent()
+        {
+            // Create new output event
+            audio_output = new WaveOutEvent
+            {
+                DesiredLatency = 60,
+                NumberOfBuffers = 2
+            };
+            audio_output.Volume = output_volume;
+            provider.DiscardOnBufferOverflow = true;
+            audio_output.Init(provider);
+            audio_output.Play();
+            return audio_output;
+        }
+
+        private static bool DeleteInputEvent()
+        {
+            if (audio_input != null)
+            {
+                audio_input.StopRecording();
+                audio_input.Dispose();
+            }
+            return true;
+        }
+
+        private static bool DeleteOutputEvent()
+        {
+            if (audio_output != null)
+            {
+                audio_output.Stop();
+                audio_output.Dispose();
+            }
+            return true;
+        }
+
     }
 
     public class Log

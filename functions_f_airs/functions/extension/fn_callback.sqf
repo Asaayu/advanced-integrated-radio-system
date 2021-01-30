@@ -7,9 +7,13 @@ params
 
 switch (tolower _function) do
 {
-	case "airs_fnc_set_device":
+	case "airs_fnc_set_input_device":
 	{
-		_data call AIRS_fnc_set_device;
+		_data call AIRS_fnc_set_input_device;
+	};
+	case "airs_fnc_set_output_device":
+	{
+		_data call AIRS_fnc_set_output_device;
 	};
 	default
 	{

@@ -33,6 +33,14 @@
 			<Original>Misc. Settings</Original>
 			<English>Misc. Settings</English>
 		</Key>
+		<Key ID="STR_AIRS_SETTINGS_OUTPUT_VOLUME_TITLE">
+			<Original>Output Volume</Original>
+			<English>Output Volume</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_OUTPUT_VOLUME_TOOLTIP">
+			<Original>Increase or decrease the volume of all audio output from the mod.</Original>
+			<English>Increase or decrease the volume of all audio output from the mod.</English>
+		</Key>
 		<Key ID="STR_AIRS_SETTINGS_INPUT_DEVICE_TITLE">
 			<Original>Input Device</Original>
 			<English>Input Device</English>
@@ -40,6 +48,14 @@
 		<Key ID="STR_AIRS_SETTINGS_INPUT_DEVICE_TOOLTIP">
 			<Original>This is the device which will be used as the input device for audio.\nTo change this setting go to the Windows Sound Control Panel, select the 'Recording' tab, then select and set the desired device as the 'Default Communication Device'.\nChanges to the default device may cause issues if the game is not restarted.</Original>
 			<English>This is the device which will be used as the input device for audio.\nTo change this setting go to the Windows Sound Control Panel, select the 'Recording' tab, then select and set the desired device as the 'Default Communication Device'.\nChanges to the default device may cause issues if the game is not restarted.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_OUTPUT_DEVICE_TITLE">
+			<Original>Output Device</Original>
+			<English>Output Device</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_OUTPUT_DEVICE_TOOLTIP">
+			<Original>This is the device which will be used as the Output device for audio.\nTo change this setting go to the Windows Sound Control Panel, select the 'Playback' tab, then select and set the desired device as the 'Default Device'.\nChanges to the default device may cause issues if the game is not restarted.</Original>
+			<English>This is the device which will be used as the Output device for audio.\nTo change this setting go to the Windows Sound Control Panel, select the 'Playback' tab, then select and set the desired device as the 'Default Device'.\nChanges to the default device may cause issues if the game is not restarted.</English>
 		</Key>
 		<Key ID="STR_AIRS_SETTINGS_INPUT_DEVICE_NONE">
 			<Original>No device found</Original>
@@ -70,8 +86,8 @@
 			<English>Volume Gate</English>
 		</Key>
 		<Key ID="STR_AIRS_SETTINGS_VOLUME_GATE_TOOLTIP">
-			<Original>When using Voice Activation Detection or if specifically enabled for Push-To-Talk, audio data will only be transmitted if the volume of the audio is above the value set in the Volume Gate slider.</Original>
-			<English>When using Voice Activation Detection or if specifically enabled for Push-To-Talk, audio data will only be transmitted if the volume of the audio is above the value set in the Volume Gate slider.</English>
+			<Original>When using Voice Activation Detection or if specifically enabled for Push-To-Talk, audio data will only be transmitted if the amplitude of the audio is above the value set in the Volume Gate slider.</Original>
+			<English>When using Voice Activation Detection or if specifically enabled for Push-To-Talk, audio data will only be transmitted if the amplitude of the audio is above the value set in the Volume Gate slider.</English>
 		</Key>
 		<Key ID="STR_AIRS_SETTINGS_MIC_VOLUME_TITLE">
 			<Original>Microphone Volume</Original>
@@ -97,19 +113,51 @@
 			<Original>Units that are speaking will continuously move their lips as if they are talking to simulate lip syncing between the audio and the unit's mouth.\nWill also make it easier to distinguish who is talking in a group.</Original>
 			<English>Units that are speaking will continuously move their lips as if they are talking to simulate lip syncing between the audio and the unit's mouth.\nWill also make it easier to distinguish who is talking in a group.</English>
 		</Key>
-		<Key ID="STR_AIRS_SETTINGS_PTT_RELEASE_TITLE">
-			<Original>Push-To-Talk Release Delay</Original>
-			<English>Push-To-Talk Release Delay</English>
+		<Key ID="STR_AIRS_SETTINGS_PTT_GATE_TITLE">
+			<Original>Push-To-Talk Volume Gate</Original>
+			<English>Push-To-Talk Volume Gate</English>
 		</Key>
-		<Key ID="STR_AIRS_SETTINGS_PTT_RELEASE_TOOLTIP">
-			<Original>Delay the ending of transmitting audio when the Push-To-Talk key is released.</Original>
-			<English>Delay the ending of transmitting audio when the Push-To-Talk key is released.</English>
+		<Key ID="STR_AIRS_SETTINGS_PTT_GATE_TOOLTIP">
+			<Original>When enabled, audio will only be transmitted when both the Push-To-Talk key is pressed, and the audio passes the volume gate..</Original>
+			<English>When enabled, audio will only be transmitted when both the Push-To-Talk key is pressed, and the audio passes the volume gate.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_AUDIO_CLICK_TITLE">
+			<Original>Audio Transmitting Clicks</Original>
+			<English>Audio Transmitting Clicks</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_AUDIO_CLICK_TOOLTIP">
+			<Original>When enabled, a mic click sound will play when your audio starts and stops being transmitted.</Original>
+			<English>When enabled, a mic click sound will play when your audio starts and stops being transmitted.</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_NOTIFICATION_VOLUME_TITLE">
+			<Original>Notification Volume</Original>
+			<English>Notification Volume</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_NOTIFICATION_VOLUME_TOOLTIP">
+			<Original>Increase or decrease the volume of the notifications, this effect is only applied to local notifications, such as microphone/speaker mute/unmute noises.</Original>
+			<English>Increase or decrease the volume of the notifications, this effect is only applied to local notifications, such as microphone/speaker mute/unmute noises.</English>
 		</Key>
 	</Package>
 	<Package name="Keybinds">
-		<Key ID="STR_AIRS_KEYBINDS_PUSHTOTALK_TITLE">
-			<Original>Push To Talk</Original>
-			<English>Push To Talk</English>
+		<Key ID="STR_AIRS_KEYBINDS_PUSH_TO_TALK_TITLE">
+			<Original>Push To Talk (Local)</Original>
+			<English>Push To Talk (Local)</English>
+		</Key>
+		<Key ID="STR_AIRS_KEYBINDS_PUSH_TO_TALK_RADIO_TITLE">
+			<Original>Push To Talk (Radio)</Original>
+			<English>Push To Talk (Radio)</English>
+		</Key>
+		<Key ID="STR_AIRS_KEYBINDS_PUSH_TO_TALK_GLOBAL_TITLE">
+			<Original>Push To Talk (Global)</Original>
+			<English>Push To Talk (Global)</English>
+		</Key>
+		<Key ID="STR_AIRS_KEYBINDS_MUTE_MICROPHONE_TOGGLE_TITLE">
+			<Original>Mute Microphone (Toggle)</Original>
+			<English>Mute Microphone (Toggle)</English>
+		</Key>
+		<Key ID="STR_AIRS_KEYBINDS_MUTE_SPEAKER_TOGGLE_TITLE">
+			<Original>Mute Speaker (Toggle)</Original>
+			<English>Mute Speaker (Toggle)</English>
 		</Key>
 	</Package>
 </Project>

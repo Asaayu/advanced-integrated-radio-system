@@ -7,3 +7,10 @@ if (("airs_client" callExtension "info") == "") exitWith
 };
 
 "airs_client" callExtension "setup";
+
+private _audio_classes = configProperties [configFile >> "airs_audio", "true", false];
+{
+	private _name = configName _x;
+	private _filepath = getText (_x);
+	"airs_client" callExtension format["set_audio_position:%1:%2",_name,_filepath];
+} foreach _audio_classes;

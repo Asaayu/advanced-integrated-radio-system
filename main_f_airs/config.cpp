@@ -12,3 +12,5 @@ class cfgpatches
 		requiredAddons[] = { "A3_Data_F", "cba_main" };
 	};
 };
+
+#include "airs_audio.hpp"
