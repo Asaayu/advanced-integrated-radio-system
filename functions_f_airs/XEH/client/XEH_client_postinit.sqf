@@ -42,7 +42,9 @@ addMissionEventHandler ["ExtensionCallback",
 
 call AIRS_fnc_disable_channels;
 
-["airs_talking", {systemChat str _this}] call CBA_fnc_addEventHandler;
+// Eventhandlers
+#include "..\..\inc\evh_player_talking.sqf"
+#include "..\..\inc\evh_unit_changed.sqf"
 
 [
 	{getClientStateNumber == 10},

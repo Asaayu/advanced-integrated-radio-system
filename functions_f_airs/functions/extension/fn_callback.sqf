@@ -15,10 +15,10 @@ switch (tolower _function) do
 	{
 		_data call AIRS_fnc_set_output_device;
 	};
-	case "airs_talking":
+	case "airs_player_talking":
 	{
 		private _data = parseSimpleArray _data;
-		["airs_talking", _data] call CBA_fnc_globalEvent;
+		["airs_player_talking", _data] call CBA_fnc_globalEvent;
 	};
 	default
 	{

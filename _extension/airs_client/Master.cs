@@ -102,7 +102,7 @@ namespace airs_client
                 return "";
 
             switch (parameters[0])
-            {
+            {                    
                 // SET_PTT: Called when the user presses their Push-To-Talk key
                 case "set_ptt":                    
                     return VOIP.PTT(parameters[1] == "1", 0).ToString();
@@ -315,6 +315,8 @@ namespace airs_client
 
     class VOIP
     {
+        private static string player_id = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Process)["STEAMID"].ToString();
+
         private static int voice_mode;
         internal static bool local_playback;
         internal static int volume_gate;
@@ -413,7 +415,7 @@ namespace airs_client
                             }
 
                             // Call eventhandler
-                            Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{true}]");
+                            Master.callback.Invoke("AIRS_VOIP", "airs_player_talking", $"['{player_id}',{transmission_type},{true}]");
                             ct_click_done = true;
                         }
                         break;
@@ -434,7 +436,7 @@ namespace airs_client
                     }
 
                     // Call eventhandler
-                    Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{false}]");
+                    Master.callback.Invoke("AIRS_VOIP", "airs_player_talking", $"['{player_id}',{transmission_type},{false}]");
                     audio_click_done = false;
                 }
 
@@ -502,7 +504,7 @@ namespace airs_client
                 }
 
                 // Call eventhandler
-                Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{true}]");
+                Master.callback.Invoke("AIRS_VOIP", "airs_player_talking", $"['{player_id}',{transmission_type},{true}]");
                 audio_click_done = true;
 
                 // Start recording audio
@@ -517,7 +519,7 @@ namespace airs_client
                 }
 
                 // Call eventhandler
-                Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{false}]");
+                Master.callback.Invoke("AIRS_VOIP", "airs_player_talking", $"['{player_id}',{transmission_type},{false}]");
                 audio_click_done = false;
             }
 
@@ -556,7 +558,7 @@ namespace airs_client
                             }
 
                             // Call eventhandler
-                            Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{true}]");
+                            Master.callback.Invoke("AIRS_VOIP", "airs_player_talking", $"['{player_id}',{transmission_type},{true}]");
                             audio_click_done = true;
                         }
                         else if (!gate_passed && audio_click_done)
@@ -568,7 +570,7 @@ namespace airs_client
                             }
 
                             // Call eventhandler
-                            Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{false}]");
+                            Master.callback.Invoke("AIRS_VOIP", "airs_player_talking", $"['{player_id}',{transmission_type},{false}]");
                             audio_click_done = false;
                         }
                         break;

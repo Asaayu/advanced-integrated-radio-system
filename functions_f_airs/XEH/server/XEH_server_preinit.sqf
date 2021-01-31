@@ -15,4 +15,8 @@ if (("airs_server" callExtension "info") == "") exitWith
 // Currently the 3DEN editor is not supported
 if is3DEN exitWith { "airs_client" callExtension "log:User opened 3den mission, client 'XEH_server_preinit' executed halted."; };
 
+// Create the namespace which will contain the player object references
+airs_player_namespace = true call CBA_fnc_createNamespace;
+publicVariable "airs_player_namespace";
+
 diag_log "server started";
