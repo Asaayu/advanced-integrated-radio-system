@@ -23,8 +23,15 @@ class extended_preinit_eventhandlers
 {
 	class airs_preinit_event
 	{
-		serverinit = "call compile preprocessFileLineNumbers '\airs\functions_f_airs\XEH\server\XEH_server_preinit.sqf'";
-		clientinit = "call compile preprocessFileLineNumbers '\airs\functions_f_airs\XEH\client\XEH_client_preinit.sqf'";
+
+	};
+};
+class extended_postinit_eventhandlers
+{
+	class airs_postinit_event
+	{
+		serverinit = "call compile preprocessFileLineNumbers '\airs\functions_f_airs\XEH\server\XEH_server_postinit.sqf'";
+		clientinit = "call compile preprocessFileLineNumbers '\airs\functions_f_airs\XEH\client\XEH_client_postinit.sqf'";
 	};
 };
 

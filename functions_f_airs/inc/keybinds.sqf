@@ -5,6 +5,7 @@
 	"STR_AIRS_KEYBINDS_PUSH_TO_TALK_TITLE",
 	{
 		"airs_client" callExtension format["set_ptt:%1", 1];
+
 	},
 	{
 		"airs_client" callExtension format["set_ptt:%1", 0];

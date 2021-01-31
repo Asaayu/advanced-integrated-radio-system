@@ -104,20 +104,17 @@ namespace airs_client
             switch (parameters[0])
             {
                 // SET_PTT: Called when the user presses their Push-To-Talk key
-                case "set_ptt":
-                    VOIP.PTT(parameters[1] == "1", 0);
-                    return "true";
-                    
+                case "set_ptt":                    
+                    return VOIP.PTT(parameters[1] == "1", 0).ToString();
+
                 // SET_PTT_RADIO: Called when the user presses their Radio Push-To-Talk key
                 case "set_ptt_radio":
-                    VOIP.PTT(parameters[1] == "1", 1);
-                    return "true";
-                    
+                    return VOIP.PTT(parameters[1] == "1", 1).ToString();
+
                 // SET_PTT_GLOBAL: Called when the user presses their Global Push-To-Talk key
                 case "set_ptt_global":
-                    VOIP.PTT(parameters[1] == "1", 2);
-                    return "true";
-                    
+                    return VOIP.PTT(parameters[1] == "1", 2).ToString();
+
                 // SET_AUDIO_CLICK: Called when the user changes the aucio click setting
                 case "set_audio_click":
                     VOIP.audio_click = parameters[1] == "1";
@@ -162,17 +159,38 @@ namespace airs_client
 
                 // TOGGLE_SPEAKERS: Called when the user mutes/unmutes the speaker output
                 case "toggle_speakers":
-                    VOIP.ToggleSpeakers();
-                    return "true";
+                    return VOIP.ToggleSpeakers().ToString();
 
                 // TOGGLE_MICROPHONE: Called when the user mutes/unmutes the microphone input
                 case "toggle_microphone":
-                    VOIP.ToggleMicrophone();
+                    return VOIP.ToggleMicrophone().ToString();
+
+                // UPDATE_DEVICES: Called when a mission starts
+                case "update_devices":
+                    // List default device in options menu
+                    UpdateDevices();
+                    return "true";
+                    
+                // CONNECT: Called when a mission starts
+                case "connect":
+                    // List default device in options menu
+                    UpdateDevices();
+
+                    VOIP.in_mission = true;
+
+                    // Connect to server
+                    ConnectToServer();
                     return "true";
 
-                // PREINIT: Called when a mission starts
-                case "preinit":
+                // DISCONNECT: Called when leaving a mission
+                case "disconnect":
+                    // List default device in options menu
                     UpdateDevices();
+
+                    VOIP.in_mission = false;
+
+                    // Disconnect from server
+                    DisconnectFromServer();
                     return "true";
 
                 // SETUP: Called when the game starts
@@ -199,6 +217,39 @@ namespace airs_client
             // Setup the VOIP stuff
             VOIP.Setup();
             return "";
+        }
+        
+        private static string ConnectToServer()
+        {
+            VOIP.connected = true;
+
+            // Create output device
+            VOIP.CreateOutputEvent();
+
+            
+            // Play notification
+            Audio.PlayNotification("ui_connected");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"*** CONNECTED TO SERVER ***");
+            Console.ResetColor();
+
+            return "true";
+        }
+        
+        private static string DisconnectFromServer()
+        {
+            VOIP.connected = false;
+
+            // Delete any recording/output device
+            VOIP.DeleteInputEvent();
+            VOIP.DeleteOutputEvent();
+
+            // Play notification
+            Audio.PlayNotification("ui_disconnected");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"*** DISCONNECTED FROM SERVER ***");
+            Console.ResetColor();
+            return "true";
         }
         
         private static string UpdateDevices()
@@ -272,8 +323,12 @@ namespace airs_client
 
         internal static int transmission_type;
 
-        internal static bool audio_click;
-        internal static bool audio_click_done;
+        internal static bool in_mission;
+        internal static bool connected;
+
+        internal static bool audio_click = false;
+        internal static bool audio_click_done = false;
+        internal static bool ct_click_done = false;
 
         internal static bool microphone_muted;
         internal static bool speakers_muted;
@@ -294,14 +349,20 @@ namespace airs_client
             sender = new UdpAudioSender(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9986));
 
             encoder = new OpusEncoder(Application.VoIP, 16000, 2);
-            decoder = new OpusDecoder();
-
-            CreateOutputEvent();
+            decoder = new OpusDecoder(16000, 2);
             return "true";
+        }
+
+        internal static bool CheckStatus()
+        {
+            return (in_mission && connected);
         }
 
         internal static bool ToggleSpeakers()
         {
+            if (!CheckStatus())
+                return false;
+
             if (speakers_muted)
             {
                 // Speakers unmuted
@@ -327,6 +388,9 @@ namespace airs_client
 
         internal static bool ToggleMicrophone()
         {
+            if (!CheckStatus())
+                return false;
+
             if (microphone_muted)
             {
                 // Play notification
@@ -340,6 +404,18 @@ namespace airs_client
                     // Continuous Transmission
                     case 2:
                         CreateInputEvent().StartRecording();
+                        if (!ct_click_done)
+                        {
+                            if (audio_click)
+                            {
+                                // Play notification
+                                Audio.PlayNotification("ui_ptt_start");
+                            }
+
+                            // Call eventhandler
+                            Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{true}]");
+                            ct_click_done = true;
+                        }
                         break;
                 }
                 microphone_muted = false;
@@ -348,6 +424,19 @@ namespace airs_client
             {
                 // Play notification
                 Audio.PlayNotification("ui_mic_mute");
+
+                if (audio_click_done)
+                {
+                    if (audio_click)
+                    {
+                        // Play notification
+                        Audio.PlayNotification("ui_ptt_end");
+                    }
+
+                    // Call eventhandler
+                    Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{false}]");
+                    audio_click_done = false;
+                }
 
                 // Microphone muted
                 DeleteInputEvent();
@@ -381,24 +470,24 @@ namespace airs_client
                     voice_mode = 1;
                     CreateInputEvent().StartRecording();
                     return true;
-
-                // Continuous Transmission
-                case 2:
-                    voice_mode = 2;
-                    CreateInputEvent().StartRecording();
-                    return true;
             }
 
-            Log.Error($"Voice mode can only be Push-To-Talk (0) Voice Activation Detection (1), or Continuous Transmission (2). Incorrect value: '{mode}'");
+            Log.Error($"Voice mode can only be Push-To-Talk (0) or Voice Activation Detection (1). Incorrect value: '{mode}'");
             return false;
         }
         
         internal static bool PTT(bool active, int type)
         {
+            if (!CheckStatus())
+                return false;
+
+            if (voice_mode != 0)
+                return false;
+
             // Stop any audio recording
             DeleteInputEvent();
 
-            if (microphone_muted || speakers_muted)
+            if (microphone_muted)
                 return false;
 
             if (active)
@@ -406,22 +495,30 @@ namespace airs_client
                 // Set transmission type for udp packet
                 transmission_type = type;
 
-                // Start recording audio
-                CreateInputEvent().StartRecording();
-            };
-
-            if (audio_click)
-            {
-                if (active)
+                if (audio_click)
                 {
                     // Play notification
                     Audio.PlayNotification("ui_ptt_start");
                 }
-                else
+
+                // Call eventhandler
+                Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{true}]");
+                audio_click_done = true;
+
+                // Start recording audio
+                CreateInputEvent().StartRecording();                
+            }
+            else if (audio_click_done)
+            {
+                if (audio_click)
                 {
                     // Play notification
                     Audio.PlayNotification("ui_ptt_end");
                 }
+
+                // Call eventhandler
+                Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{false}]");
+                audio_click_done = false;
             }
 
             Log.Debug($"PTT: {active}");
@@ -430,6 +527,9 @@ namespace airs_client
 
         private static async void OnAudioCaptured(object sender, WaveInEventArgs e)
         {
+            if (!CheckStatus())
+                return;
+
             // Do not send data if microphone or speakers are muted
             if (!microphone_muted && !speakers_muted)
             {
@@ -439,38 +539,48 @@ namespace airs_client
                 {
                         // Push-To-Talk does not need to be checked as audio is only recorded when button is pressed
                     case 0:
-                        // Continuous Transmission always records audio
-                    case 2:
                         if (mic_gain != 1.0f)
                             ApplyMicrophoneGain(e, 0, mic_gain);
                         break;
 
-                        // Voice Activation Detection will need to make sure the volume is above the volume gate
+                    // Voice Activation Detection will need to make sure the volume is above the volume gate
                     case 1:
                         gate_passed = ApplyMicrophoneGain(e, 0, mic_gain) > volume_gate;
-                        if (audio_click)
+
+                        if (gate_passed && !audio_click_done)
                         {
-                            if (gate_passed && !audio_click_done)
+                            if (audio_click)
                             {
                                 // Play notification
                                 Audio.PlayNotification("ui_ptt_start");
-                                audio_click_done = true;
                             }
-                            else if (!gate_passed && audio_click_done)
+
+                            // Call eventhandler
+                            Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{true}]");
+                            audio_click_done = true;
+                        }
+                        else if (!gate_passed && audio_click_done)
+                        {
+                            if (audio_click)
                             {
                                 // Play notification
                                 Audio.PlayNotification("ui_ptt_end");
-                                audio_click_done = false;
                             }
+
+                            // Call eventhandler
+                            Master.callback.Invoke("AIRS_VOIP", "airs_talking", $"[{transmission_type},{false}]");
+                            audio_click_done = false;
                         }
                         break;
                 };
 
-
                 if (gate_passed)
                 {
+                    // Playback to player if enabled
                     if (local_playback)
                         provider.AddSamples(e.Buffer, 0, e.BytesRecorded);
+
+                    
 
                     await Task.Run(() =>
                     {
@@ -530,9 +640,12 @@ namespace airs_client
             
             return max;
         }
-        
-        private static WaveInEvent CreateInputEvent()
+
+        internal static WaveInEvent CreateInputEvent()
         {
+            if (!CheckStatus())
+                return null;
+
             // Create new input event
             audio_input = new WaveInEvent
             {
@@ -545,8 +658,11 @@ namespace airs_client
             return audio_input;
         }   
 
-        private static WaveOutEvent CreateOutputEvent()
+        internal static WaveOutEvent CreateOutputEvent()
         {
+            if (!CheckStatus())
+                return null;
+
             // Create new output event
             audio_output = new WaveOutEvent
             {
@@ -560,7 +676,7 @@ namespace airs_client
             return audio_output;
         }
 
-        private static bool DeleteInputEvent()
+        internal static bool DeleteInputEvent()
         {
             if (audio_input != null)
             {
@@ -570,7 +686,7 @@ namespace airs_client
             return true;
         }
 
-        private static bool DeleteOutputEvent()
+        internal static bool DeleteOutputEvent()
         {
             if (audio_output != null)
             {
@@ -652,6 +768,7 @@ namespace airs_client
             {
                 AllocConsole();
                 Console.Title = "AIRS VOIP - " + App.version + " | DO NOT CLOSE THIS WINDOW!!!";
+                Console.TreatControlCAsInput = true;
 
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("!!! DO NOT CLOSE THIS WINDOW !!!");

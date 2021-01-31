@@ -11,4 +11,8 @@ class airs_audio
 	// PTT tones
 	ui_ptt_start = "@airs\audio\ui_ptt_start.ogg";
 	ui_ptt_end = "@airs\audio\ui_ptt_end.ogg";
+
+	// Connection tones
+	ui_connected = "@airs\audio\ui_connected.ogg";
+	ui_disconnected = "@airs\audio\ui_disconnected.ogg";
 };

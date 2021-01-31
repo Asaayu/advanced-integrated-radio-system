@@ -19,5 +19,11 @@ class cfgfunctions
 			class set_input_device {};
 			class set_output_device {};
 		};
+		class airs_chat
+		{
+		        file = "\airs\functions_f_airs\functions\chat";
+			class disable_channels {};
+			class switch_channel {};
+		};
 	};
 };
