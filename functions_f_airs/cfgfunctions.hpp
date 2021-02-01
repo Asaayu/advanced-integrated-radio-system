@@ -26,5 +26,15 @@ class cfgfunctions
 			class disable_channels {};
 			class switch_channel {};
 		};
+		class airs_server
+		{
+		        file = "\airs\functions_f_airs\functions\server";
+			class server_connect_client {};
+		};
+		class airs_client
+		{
+		        file = "\airs\functions_f_airs\functions\client";
+			class client_connected {};
+		};
 	};
 };

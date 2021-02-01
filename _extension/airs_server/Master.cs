@@ -69,9 +69,20 @@ namespace airs_server
             // Reduce output by 1 to avoid accidental overflow
             outputSize--;
 
+            string return_string = "";
+
             // Send input to switch function
-            string return_string = Functions.Main(function);
-            Log.Debug($"Function call: '{function}', returned '{return_string}'");
+            try
+            {
+                Log.Debug($"Calling: '{function}'...");
+                return_string = Functions.Main(function);
+                Log.Debug($"Function call: '{function}', returned '{return_string}'");
+            }
+            catch (Exception e)
+            {
+                Log.Info("Exception caught in main function call!");
+                Log.Error(e.ToString());
+            };
 
             // Return output to Arma 3
             output.Append(return_string);
@@ -90,25 +101,31 @@ namespace airs_server
                 return "";
 
             switch (parameters[0])
-            {                    
+            {
                 // MISSION: Called when the server starts/ends a mission
                 case "mission":
-                    // Setup server if it hasn't been setup
-                    if (UDPListener.listener == null)
-                        VOIP.SetupServer();
-
-                    VOIP.in_mission = parameters[1] == "1";
-                    if (VOIP.in_mission)
+                    if (parameters[1] == "1")
                     {
-                        // Allow client connections
-                        VOIP.EnableServer();
+                        // Check if the UDP server is setup
+                        if (UDP.server == null)
+                            UDP.Create();
+
+                        // Start transmitting voice data
+                        UDP.Enable();
                     }
                     else
                     {
-                        // Disable client connections
-                        VOIP.DisableServer();
+                        // Stop transmitting voice data
+                        UDP.Disable();
                     }                    
-                    return VOIP.in_mission.ToString();
+                    return "true";
+
+                // ADD_CLIENT: Add a client to the clients list
+                case "add_client":
+                    // Joined in the server
+                    UDP.clients.Add(parameters[1], IPAddress.Parse(parameters[2]));
+                    Log.Debug($"Client '{parameters[1]}' at '{parameters[2]}' added to clients dictionary");
+                    return "true";
 
                 // INFO: Show version information
                 case "info":
@@ -118,58 +135,143 @@ namespace airs_server
         }
     };
 
-    class VOIP
+    class UDP
     {
-        internal static bool in_mission;
-        internal static bool allow_connection;
-
         internal static string server_ip = new WebClient().DownloadString("http://icanhazip.com").Replace("\n", "").Replace(" ", "");
-        internal static int port = 9987;
+        internal const int server_port = 9986;
+        internal const int client_port = 9985;
 
-        internal static string SetupServer()
+        internal static IPEndPoint end_point = new IPEndPoint(IPAddress.Any, 0);
+
+        internal static UdpClient server;
+        internal static Dictionary<string,IPAddress> clients;
+
+        private static Thread listen_thread;
+
+        internal static bool Create()
         {
             try
             {
-                new Thread(() =>
-                {
-                    UDPListener.StartListener();
-                }).Start();
+                // Create client ip list
+                clients = new Dictionary<string, IPAddress>();
 
-                Master.callback.Invoke("AIRS_VOIP_SERVER", "airs_set_server_address", $"{server_ip}|{port}");
+                // Create UDP client on the defined port
+                server = new UdpClient(server_port);
+                server.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Log.Info($"Server on '{server_ip}' has started on port {port}");
-                Log.Info($"Waiting for a mission to start before accepting data...");
+                // Create listen thread
+                listen_thread = new Thread(Listen);
+
+                // Send info to clients 
+                Master.callback.Invoke("AIRS_VOIP_SERVER", "airs_set_server_address", server_ip);
+
+                // Log for user
+                Console.ForegroundColor = ConsoleColor.Green;
+                Log.Info($"Server on '{server_ip}' has started on port {server_port}");
+                Log.Info("Waiting for a mission to start before transmitting data...");
                 Console.ResetColor();
-                return "true";
-
+                return true;
             }
             catch (Exception e)
             {
-                Log.Info("An error occured starting server for client connections...");
+                Log.Info("An error occured creating UDP client for server...");
                 Log.Error(e.ToString());
-                return "false";
+                return false;
             }
         }
 
-        internal static string EnableServer()
+        internal static bool Enable()
         {
-            Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Log.Info($"Server is now allowing connections from clients...");
-            Console.ResetColor();
+            try
+            {
+                //listen_thread.Start();
 
-            allow_connection = true;
-            return "true";
+                new Thread(() =>
+                {
+                    Thread.CurrentThread.IsBackground = true;
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Log.Info("Getting ready to wait!");
+                            Console.ResetColor();
+                            // Receive data
+                            byte[] data = server.Receive(ref end_point);
+                            Log.Debug("Received Data!");
+                            Log.Debug(Encoding.ASCII.GetString(data));
+                            Log.Debug("1");
+                        }
+                        catch (ThreadAbortException)
+                        {
+                            Log.Info("Listening thread execution aborted!");
+                            return;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Info("An error occured when listening to UDP client on server...");
+                            Log.Error(e.ToString());
+                            return;
+                        }
+                    }
+                }).Start();
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Log.Info("Server is now transmitting data from clients...");
+                Console.ResetColor();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured enabling UDP client for server...");
+                Log.Error(e.ToString());
+                return false;
+            }            
         }
         
-        internal static string DisableServer()
+        internal static bool Disable()
         {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Log.Info($"Server is now blocking connections from clients...");
-            Console.ResetColor();
+            try
+            {
+                listen_thread.Abort();
 
-            allow_connection = false;
-            return "true";
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Log.Info($"Server is no longer transmitting data from clients...");
+                Console.ResetColor();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured disabling UDP client for server...");
+                Log.Error(e.ToString());
+                return false;
+            }            
+        }
+        
+        private static void Listen()
+        {
+            try
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Log.Info("Getting ready to wait!");
+                Console.ResetColor();
+                // Receive data
+                byte[] data = server.Receive(ref end_point);
+                Log.Debug("Received Data!");
+                Log.Debug(Encoding.ASCII.GetString(data));
+                Log.Debug("1");
+            }
+            catch (ThreadAbortException)
+            {
+                Log.Info("Listening thread execution aborted!");
+                return;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured when listening to UDP client on server...");
+                Log.Error(e.ToString());
+                return;
+            }
         }
     }
 
@@ -265,44 +367,6 @@ namespace airs_server
                 Log.Info("'-airs_debug' parameter found, opening live log console");
             }
             return true;
-        }
-    }
-
-    public class UDPListener
-    {
-        internal static UdpClient listener;
-        private static IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, VOIP.port);
-
-        internal static void StartListener()
-        {
-            listener = new UdpClient(VOIP.port);
-
-            try
-            {
-                while (true)
-                {
-                    Console.WriteLine("Waiting for broadcast");
-                    byte[] bytes = listener.Receive(ref remoteEP);
-
-                    Console.WriteLine($"Received broadcast from {remoteEP} :");
-                    Console.WriteLine($" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
-                }
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine(e);
-            }
-            finally
-            {
-                listener.Close();
-            }
-        }
-
-        internal static void StopListener()
-        {
-            Log.Info($"Closing UDP listner on port '{VOIP.port}'");
-
-            listener.Close();
         }
     }
 }

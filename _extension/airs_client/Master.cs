@@ -10,7 +10,6 @@ using NAudio.Wave;
 using NAudio.CoreAudioApi;
 using NVorbis;
 using NAudio.Vorbis;
-using NetworkChat;
 using OpusDotNet;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -176,10 +175,34 @@ namespace airs_client
                     // List default device in options menu
                     UpdateDevices();
 
+                    // User is in a mission
                     VOIP.in_mission = true;
 
                     // Connect to server
-                    ConnectToServer();
+                    ConnectToServer(parameters[1]);
+                    return "true";
+                    
+                // CONNECTED: Called when the server responds to the players connection request
+                case "connected":
+                    // Save connected variable
+                    UDP.connected = true;
+
+                    // Create UDP connection
+                    if (UDP.client != null)
+                        UDP.Dispose();
+
+                    // Create UDP connection
+                    UDP.Create();
+                    UDP.Enable();
+
+                    // Create output device
+                    VOIP.CreateOutputEvent();
+
+                    // Play notification
+                    Audio.PlayNotification("ui_connected");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"*** CONNECTED TO SERVER ***");
+                    Console.ResetColor();
                     return "true";
 
                 // DISCONNECT: Called when leaving a mission
@@ -219,26 +242,21 @@ namespace airs_client
             return "";
         }
         
-        private static string ConnectToServer()
+        private static string ConnectToServer(string server_ip)
         {
-            VOIP.connected = true;
+            UDP.server_ip = server_ip;
 
-            // Create output device
-            VOIP.CreateOutputEvent();
-
-            
-            // Play notification
-            Audio.PlayNotification("ui_connected");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"*** CONNECTED TO SERVER ***");
-            Console.ResetColor();
-
+            // Call back to server to connect client
+            Master.callback.Invoke("AIRS_VOIP", "airs_server_connect", $"['{VOIP.player_id}','{UDP.client_ip}']");
             return "true";
         }
-        
+
         private static string DisconnectFromServer()
         {
-            VOIP.connected = false;
+            UDP.connected = false;
+
+            // Dispose of the UDP connection to the server 
+            UDP.Dispose();
 
             // Delete any recording/output device
             VOIP.DeleteInputEvent();
@@ -315,9 +333,9 @@ namespace airs_client
 
     class VOIP
     {
-        private static string player_id = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Process)["STEAMID"].ToString();
+        internal static string player_id = Environment.GetEnvironmentVariables(EnvironmentVariableTarget.Process)["STEAMID"].ToString();
 
-        private static int voice_mode;
+        internal static int voice_mode;
         internal static bool local_playback;
         internal static int volume_gate;
         internal static float mic_gain;
@@ -326,7 +344,6 @@ namespace airs_client
         internal static int transmission_type;
 
         internal static bool in_mission;
-        internal static bool connected;
 
         internal static bool audio_click = false;
         internal static bool audio_click_done = false;
@@ -343,13 +360,8 @@ namespace airs_client
 
         private static BufferedWaveProvider provider = new BufferedWaveProvider(new WaveFormat(16000, 2));
 
-        private static UdpAudioSender sender;
-        private static UdpAudioReceiver receiver;
-
         internal static string Setup()
         {
-            sender = new UdpAudioSender(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9986));
-
             encoder = new OpusEncoder(Application.VoIP, 16000, 2);
             decoder = new OpusDecoder(16000, 2);
             return "true";
@@ -357,7 +369,7 @@ namespace airs_client
 
         internal static bool CheckStatus()
         {
-            return (in_mission && connected);
+            return (in_mission && UDP.connected);
         }
 
         internal static bool ToggleSpeakers()
@@ -527,7 +539,7 @@ namespace airs_client
             return active;
         }
 
-        private static async void OnAudioCaptured(object sender, WaveInEventArgs e)
+        private static void OnAudioCaptured(object sender, WaveInEventArgs e)
         {
             if (!CheckStatus())
                 return;
@@ -582,27 +594,23 @@ namespace airs_client
                     if (local_playback)
                         provider.AddSamples(e.Buffer, 0, e.BytesRecorded);
 
-                    
-
-                    await Task.Run(() =>
+                    try
                     {
-                        try
-                        {
+                        // Stopping the recording in the middle causes not enough frames to be saved
+                        if (e.BytesRecorded < 3840)
+                            return;
 
-                            // Stopping the recording in the middle causes not enough frames to be saved
-                            if (e.BytesRecorded < 3840)
-                                return;
-                            
-                            // Encode the bytes in the Opus codec
-                            byte[] encoded_bytes = new byte[e.BytesRecorded];
-                            encoder.Encode(e.Buffer, e.BytesRecorded, encoded_bytes, 60);
-                        }
-                        catch (Exception exc)
-                        {
-                            Log.Info("An exception occured during opus encoding");
-                            Log.Error(exc.ToString());
-                        }
-                    });
+                        // Encode the bytes in the Opus codec
+                        byte[] encoded_bytes = new byte[e.BytesRecorded];
+                        encoder.Encode(e.Buffer, e.BytesRecorded, encoded_bytes, 60);
+
+                        UDP.Send(Encoding.ASCII.GetBytes("This is a text"));
+                    }
+                    catch (Exception exc)
+                    {
+                        Log.Info("An exception occured during opus encoding");
+                        Log.Error(exc.ToString());
+                    }
                 }
             }
         }
@@ -700,6 +708,142 @@ namespace airs_client
 
     }
 
+    class UDP
+    {
+        internal static string client_ip = new WebClient().DownloadString("http://icanhazip.com").Replace("\n", "").Replace(" ", "");
+        internal static string server_ip;
+        internal const int server_port = 9986;
+        internal const int client_port = 9985;
+
+        internal static bool connected;
+
+        internal static IPEndPoint server_end_point;
+
+        internal static UdpClient client;
+
+        private static Thread listen_thread;
+
+        internal static bool Create()
+        {
+            try
+            {
+                // Create UDP client on the defined port
+                client = new UdpClient(client_port);
+                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+                // Set server end point
+                server_end_point = new IPEndPoint(IPAddress.Broadcast, client_port);
+
+                // Create listen thread
+                listen_thread = new Thread(Listen);
+
+                // Log for user
+                Console.ForegroundColor = ConsoleColor.Green;
+                Log.Info("Created UDP client for client...");
+                Console.ResetColor();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured creating UDP client for client...");
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
+
+        internal static bool Enable()
+        {
+            try
+            {
+                listen_thread.Start();
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Log.Info("Client is now listening for data from server...");
+                Console.ResetColor();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured enabling UDP client for client...");
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
+
+        internal static bool Disable()
+        {
+            try
+            {
+                listen_thread.Abort();
+
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Log.Info($"client is no longer listening for data from server...");
+                Console.ResetColor();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured disabling UDP client for client...");
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
+
+        internal static bool Dispose()
+        {
+            try
+            {
+                Disable();
+                client.Dispose();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured disposing UDP client for client...");
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
+
+        private static void Listen()
+        {
+            try
+            {
+                // Receive data
+                byte[] data = client.Receive(ref server_end_point);
+                Log.Debug("Received Data!");
+            }
+            catch (ThreadAbortException)
+            {
+                Log.Info("Listening thread execution aborted!");
+                return;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured when listening to UDP client on client...");
+                Log.Error(e.ToString());
+                return;
+            }
+        }
+
+        internal static bool Send(byte[] data)
+        {
+            try
+            {
+                // Send data to server
+                client.Connect(server_end_point);
+                Log.Debug(client.Send(data, data.Length).ToString());
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured sending data to UDP client on server...");
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
+    }
+
     public class Log
     {
         private static String log_file;
@@ -792,89 +936,6 @@ namespace airs_client
                 Log.Info("'-airs_debug' parameter found, opening live log console");
             }
             return true;
-        }
-    }    
-}
-
-namespace NetworkChat
-{
-    interface IAudioSender : IDisposable
-    {
-        void Send(byte[] payload);
-    }
-
-    interface IAudioReceiver : IDisposable
-    {
-        void OnReceived(Action<byte[]> handler);
-    }
-
-    class UdpAudioSender : IAudioSender
-    {
-        private readonly UdpClient udpSender;
-        public UdpAudioSender(IPEndPoint endPoint)
-        {
-            udpSender = new UdpClient();
-            udpSender.Connect(endPoint);
-        }
-
-        public void Send(byte[] payload)
-        {
-            udpSender.Send(payload, payload.Length);
-        }
-
-        public void Dispose()
-        {
-            udpSender?.Close();
-        }
-    }
-
-    class UdpAudioReceiver : IAudioReceiver
-    {
-        private Action<byte[]> handler;
-        private readonly UdpClient udpListener;
-        private bool listening;
-
-        public UdpAudioReceiver(int portNumber)
-        {
-            var endPoint = new IPEndPoint(IPAddress.Loopback, portNumber);
-
-            udpListener = new UdpClient();
-
-            // To allow us to talk to ourselves for test purposes:
-            // http://stackoverflow.com/questions/687868/sending-and-receiving-udp-packets-between-two-programs-on-the-same-computer
-            udpListener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpListener.Client.Bind(endPoint);
-
-            ThreadPool.QueueUserWorkItem(ListenerThread, endPoint);
-            listening = true;
-        }
-
-        private void ListenerThread(object state)
-        {
-            var endPoint = (IPEndPoint)state;
-            try
-            {
-                while (listening)
-                {
-                    byte[] b = udpListener.Receive(ref endPoint);
-                    handler?.Invoke(b);
-                }
-            }
-            catch (SocketException)
-            {
-                // usually not a problem - just means we have disconnected
-            }
-        }
-
-        public void Dispose()
-        {
-            listening = false;
-            udpListener?.Close();
-        }
-
-        public void OnReceived(Action<byte[]> onAudioReceivedAction)
-        {
-            handler = onAudioReceivedAction;
         }
     }
 }

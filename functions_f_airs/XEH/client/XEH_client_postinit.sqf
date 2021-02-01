@@ -58,7 +58,7 @@ call AIRS_fnc_disable_channels;
 	{getClientStateNumber == 10},
 	{
 		// Connect to server
-		"airs_client" callExtension "connect";
+		"airs_client" callExtension format["connect:%1", call airs_server_address];
 
 		// Disable channels again in case mission changed the permissions
 		call AIRS_fnc_disable_channels;
