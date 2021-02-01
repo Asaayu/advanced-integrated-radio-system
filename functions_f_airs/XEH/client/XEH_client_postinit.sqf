@@ -26,9 +26,9 @@ if (("airs_client" callExtension "info") == "") exitWith
 "airs_client" callExtension "update_devices";
 
 // Currently the 3DEN editor is not supported
-if is3DEN exitWith { "airs_client" callExtension "log:User opened 3den mission, client 'XEH_client_preinit' executed halted."; };
-if !isMultiplayer exitWith { "airs_client" callExtension "log:User opened singleplayer mission, client 'XEH_client_preinit' executed halted."; };
-if !hasInterface exitWith { "airs_client" callExtension "log:User does not have an interface, client 'XEH_client_preinit' executed halted."; };
+if is3DEN exitWith { "airs_client" callExtension "log:User opened 3den mission, client 'XEH_client_postinit' executed halted."; };
+if !isMultiplayer exitWith { "airs_client" callExtension "log:User opened singleplayer mission, client 'XEH_client_postinit' executed halted."; };
+if !hasInterface exitWith { "airs_client" callExtension "log:User does not have an interface, client 'XEH_client_postinit' executed halted."; };
 
 addMissionEventHandler ["ExtensionCallback",
 {
@@ -37,6 +37,13 @@ addMissionEventHandler ["ExtensionCallback",
 	if (_name == "AIRS_VOIP") then
 	{
 		_this call AIRS_fnc_callback;
+	}
+	else
+	{
+		if (_name == "AIRS_VOIP_SERVER" && {isServer}) then
+		{
+			_this call AIRS_fnc_callback_server;
+		}
 	};
 }];
 
@@ -45,6 +52,7 @@ call AIRS_fnc_disable_channels;
 // Eventhandlers
 #include "..\..\inc\evh_player_talking.sqf"
 #include "..\..\inc\evh_unit_changed.sqf"
+#include "..\..\inc\evh_feature_camera.sqf"
 
 [
 	{getClientStateNumber == 10},

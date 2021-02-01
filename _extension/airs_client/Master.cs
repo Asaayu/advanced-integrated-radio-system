@@ -793,7 +793,6 @@ namespace airs_client
             }
             return true;
         }
-
     }    
 }
 

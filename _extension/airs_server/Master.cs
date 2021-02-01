@@ -1,12 +1,18 @@
 ﻿using RGiesecke.DllExport;
 using System;
 using System.Runtime.InteropServices;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.IO;
-using NAudio;
+using System.Net;
+using System.Net.Sockets;
+using NAudio.Wave;
+using NAudio.CoreAudioApi;
+using NVorbis;
+using NAudio.Vorbis;
+using OpusDotNet;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace airs_server
 {
@@ -84,14 +90,25 @@ namespace airs_server
                 return "";
 
             switch (parameters[0])
-            {
-                // PREINIT: Called when a mission starts
-                case "preinit":
-                    return Preinit();
+            {                    
+                // MISSION: Called when the server starts/ends a mission
+                case "mission":
+                    // Setup server if it hasn't been setup
+                    if (UDPListener.listener == null)
+                        VOIP.SetupServer();
 
-                // SETUP: Called when a mission starts
-                case "setup":
-                    return Setup();
+                    VOIP.in_mission = parameters[1] == "1";
+                    if (VOIP.in_mission)
+                    {
+                        // Allow client connections
+                        VOIP.EnableServer();
+                    }
+                    else
+                    {
+                        // Disable client connections
+                        VOIP.DisableServer();
+                    }                    
+                    return VOIP.in_mission.ToString();
 
                 // INFO: Show version information
                 case "info":
@@ -99,19 +116,62 @@ namespace airs_server
             }
             return "";
         }
+    };
 
-        internal static string Setup()
+    class VOIP
+    {
+        internal static bool in_mission;
+        internal static bool allow_connection;
+
+        internal static string server_ip = new WebClient().DownloadString("http://icanhazip.com").Replace("\n", "").Replace(" ", "");
+        internal static int port = 9987;
+
+        internal static string SetupServer()
         {
+            try
+            {
+                new Thread(() =>
+                {
+                    UDPListener.StartListener();
+                }).Start();
 
-            return "";
+                Master.callback.Invoke("AIRS_VOIP_SERVER", "airs_set_server_address", $"{server_ip}|{port}");
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Log.Info($"Server on '{server_ip}' has started on port {port}");
+                Log.Info($"Waiting for a mission to start before accepting data...");
+                Console.ResetColor();
+                return "true";
+
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured starting server for client connections...");
+                Log.Error(e.ToString());
+                return "false";
+            }
+        }
+
+        internal static string EnableServer()
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Log.Info($"Server is now allowing connections from clients...");
+            Console.ResetColor();
+
+            allow_connection = true;
+            return "true";
         }
         
-        internal static string Preinit()
+        internal static string DisableServer()
         {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Log.Info($"Server is now blocking connections from clients...");
+            Console.ResetColor();
 
-            return "";
+            allow_connection = false;
+            return "true";
         }
-    };
+    }
 
     public class Log
     {
@@ -173,6 +233,18 @@ namespace airs_server
 
     public class AIRS_Console
     {
+        private const int MF_BYCOMMAND = 0x00000000;
+        public const int SC_CLOSE = 0xF060;
+
+        [DllImport("user32.dll")]
+        public static extern int DeleteMenu(IntPtr hMenu, int nPosition, int wFlags);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("kernel32.dll", ExactSpelling = true)]
+        private static extern IntPtr GetConsoleWindow();
+
         [DllImport("kernel32")]
         static extern bool AllocConsole();
 
@@ -182,7 +254,9 @@ namespace airs_server
             if (debug_console)
             {
                 AllocConsole();
+                DeleteMenu(GetSystemMenu(GetConsoleWindow(), false), SC_CLOSE, MF_BYCOMMAND);
                 Console.Title = "[SERVER] AIRS VOIP - " + App.version + " | DO NOT CLOSE THIS WINDOW!!!";
+                Console.TreatControlCAsInput = true;
 
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("!!! DO NOT CLOSE THIS WINDOW !!!");
@@ -192,6 +266,43 @@ namespace airs_server
             }
             return true;
         }
+    }
 
+    public class UDPListener
+    {
+        internal static UdpClient listener;
+        private static IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, VOIP.port);
+
+        internal static void StartListener()
+        {
+            listener = new UdpClient(VOIP.port);
+
+            try
+            {
+                while (true)
+                {
+                    Console.WriteLine("Waiting for broadcast");
+                    byte[] bytes = listener.Receive(ref remoteEP);
+
+                    Console.WriteLine($"Received broadcast from {remoteEP} :");
+                    Console.WriteLine($" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+                }
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                listener.Close();
+            }
+        }
+
+        internal static void StopListener()
+        {
+            Log.Info($"Closing UDP listner on port '{VOIP.port}'");
+
+            listener.Close();
+        }
     }
 }

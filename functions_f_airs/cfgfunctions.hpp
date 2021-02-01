@@ -12,6 +12,7 @@ class cfgfunctions
 		{
 		        file = "\airs\functions_f_airs\functions\extension";
 			class callback {};
+			class callback_server {};
 		};
 		class airs_callbacks
 		{
