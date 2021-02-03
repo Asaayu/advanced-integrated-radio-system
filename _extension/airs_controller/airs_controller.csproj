@@ -80,6 +80,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="TeamSpeak.Sdk">
+      <HintPath>bin\TeamSpeak.Sdk.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Master.cs" />
