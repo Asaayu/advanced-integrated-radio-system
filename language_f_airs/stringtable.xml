@@ -105,6 +105,14 @@
 			<Original>Play the incoming audio from your input device back through your speakers.\nIf playing without headphones this may cause a feedback loop between your speakers and microphone.</Original>
 			<English>Play the incoming audio from your input device back through your speakers.\nIf playing without headphones this may cause a feedback loop between your speakers and microphone.</English>
 		</Key>
+		<Key ID="STR_AIRS_SETTINGS_REMOTE_PLAYBACK_TITLE">
+			<Original>Remote Microphone Playback</Original>
+			<English>Remote Microphone Playback</English>
+		</Key>
+		<Key ID="STR_AIRS_SETTINGS_REMOTE_PLAYBACK_TOOLTIP">
+			<Original>Play your incoming audio from the server back through your speakers.\nUse this to test your connection to the server and to make sure the server is receiving and sending data correctly.</Original>
+			<English>Play your incoming audio from the server back through your speakers.\nUse this to test your connection to the server and to make sure the server is receiving and sending data correctly.</English>
+		</Key>
 		<Key ID="STR_AIRS_SETTINGS_RANDOMLIP_TITLE">
 			<Original>Lip Movement</Original>
 			<English>Lip Movement</English>

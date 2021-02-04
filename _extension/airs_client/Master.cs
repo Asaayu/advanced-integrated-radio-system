@@ -13,6 +13,7 @@ using NAudio.Vorbis;
 using OpusDotNet;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace airs_client
 {
@@ -102,36 +103,41 @@ namespace airs_client
 
             switch (parameters[0])
             {                    
-                // SET_PTT: Called when the user presses their Push-To-Talk key
+                // SET_PTT: Enables/Disables Push-To-Talk capturing
                 case "set_ptt":                    
                     return VOIP.PTT(parameters[1] == "1", 0).ToString();
 
-                // SET_PTT_RADIO: Called when the user presses their Radio Push-To-Talk key
+                // SET_PTT_RADIO: Enables/Disables radio Push-To-Talk capturing
                 case "set_ptt_radio":
                     return VOIP.PTT(parameters[1] == "1", 1).ToString();
 
-                // SET_PTT_GLOBAL: Called when the user presses their Global Push-To-Talk key
+                // SET_PTT_GLOBAL: Enables/Disables global admin Push-To-Talk capturing
                 case "set_ptt_global":
                     return VOIP.PTT(parameters[1] == "1", 2).ToString();
 
-                // SET_AUDIO_CLICK: Called when the user changes the aucio click setting
+                // SET_AUDIO_CLICK: Enables/Disables the audio mic click to allow the user to know when they are transmitting
                 case "set_audio_click":
                     VOIP.audio_click = parameters[1] == "1";
                     return "true";
 
-                // SET_VOICE_MODE: Called when the user switches from PTT to VAD or CT
+                // SET_VOICE_MODE: Change between Push-To-Talk and VAD capture modes
                 case "set_voice_mode":
                     VOIP.SetVoiceMode(int.Parse(parameters[1]));
                     return "true";
                     
-                // SET_VOLUME_GATE: Called when the user chnages the volume gate setting
+                // SET_VOLUME_GATE: Set the amplitude for the volume gate
                 case "set_volume_gate":
                     VOIP.volume_gate = int.Parse(parameters[1]);
                     return "true";
 
-                // SET_LOCAL_PLAYBACK: Called when the user enables/disables local playback
+                // SET_LOCAL_PLAYBACK: Enables/Disables local playback of the 
                 case "set_local_playback":
                     VOIP.local_playback = parameters[1] == "1";
+                    return "true";
+                    
+                // SET_REMOTE_PLAYBACK: 
+                case "set_remote_playback":
+                    VOIP.remote_playback = parameters[1] == "1";
                     return "true";
                     
                 // SET_MIC_GAIN: Called when the user changes their mic gain setting
@@ -337,6 +343,7 @@ namespace airs_client
 
         internal static int voice_mode;
         internal static bool local_playback;
+        internal static bool remote_playback;
         internal static int volume_gate;
         internal static float mic_gain;
         internal static float output_volume = 1.0f;
@@ -604,14 +611,25 @@ namespace airs_client
                         byte[] encoded_bytes = new byte[e.BytesRecorded];
                         encoder.Encode(e.Buffer, e.BytesRecorded, encoded_bytes, 60);
 
-                        UDP.Send(Encoding.ASCII.GetBytes("This is a text"));
+                        AIRS_DATA packet = new AIRS_DATA();
+                        packet.Remote_playback = remote_playback;
+                        packet.Object_id = player_id;
+                        packet.Transmission_type = transmission_type;
+                        packet.Voice_data = encoded_bytes;
+
+                        BinaryFormatter bf = new BinaryFormatter();
+                        using (var ms = new MemoryStream())
+                        {
+                            bf.Serialize(ms, packet);
+                            UDP.Send(ms.ToArray());
+                        }
                     }
                     catch (Exception exc)
                     {
                         Log.Info("An exception occured during opus encoding");
                         Log.Error(exc.ToString());
                     }
-                }
+                }   
             }
         }
     
@@ -713,11 +731,10 @@ namespace airs_client
         internal static string client_ip = new WebClient().DownloadString("http://icanhazip.com").Replace("\n", "").Replace(" ", "");
         internal static string server_ip;
         internal const int server_port = 9986;
-        internal const int client_port = 9985;
 
         internal static bool connected;
 
-        internal static IPEndPoint server_end_point;
+        internal static IPEndPoint server_end_point = new IPEndPoint(IPAddress.Any, 0);
 
         internal static UdpClient client;
 
@@ -728,14 +745,8 @@ namespace airs_client
             try
             {
                 // Create UDP client on the defined port
-                client = new UdpClient(client_port);
+                client = new UdpClient(server_port - 1);
                 client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-                // Set server end point
-                server_end_point = new IPEndPoint(IPAddress.Broadcast, client_port);
-
-                // Create listen thread
-                listen_thread = new Thread(Listen);
 
                 // Log for user
                 Console.ForegroundColor = ConsoleColor.Green;
@@ -755,6 +766,8 @@ namespace airs_client
         {
             try
             {
+                // Create listen thread
+                listen_thread = new Thread(Listen);
                 listen_thread.Start();
 
                 Console.ForegroundColor = ConsoleColor.Green;
@@ -777,7 +790,7 @@ namespace airs_client
                 listen_thread.Abort();
 
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Log.Info($"client is no longer listening for data from server...");
+                Log.Info($"Client is no longer listening for data from server...");
                 Console.ResetColor();
                 return true;
             }
@@ -809,9 +822,12 @@ namespace airs_client
         {
             try
             {
-                // Receive data
-                byte[] data = client.Receive(ref server_end_point);
-                Log.Debug("Received Data!");
+                while (true)
+                {
+                    // Receive data
+                    byte[] data = client.Receive(ref server_end_point);
+                    Log.Debug("Got Data!");
+                }
             }
             catch (ThreadAbortException)
             {
@@ -820,7 +836,7 @@ namespace airs_client
             }
             catch (Exception e)
             {
-                Log.Info("An error occured when listening to UDP client on client...");
+                Log.Info("An error occured when listening to UDP client on server...");
                 Log.Error(e.ToString());
                 return;
             }
@@ -831,8 +847,7 @@ namespace airs_client
             try
             {
                 // Send data to server
-                client.Connect(server_end_point);
-                Log.Debug(client.Send(data, data.Length).ToString());
+                Log.Debug(client.Send(data, data.Length, new IPEndPoint(IPAddress.Broadcast, server_port)).ToString());
                 return true;
             }
             catch (Exception e)
@@ -842,6 +857,15 @@ namespace airs_client
                 return false;
             }
         }
+    }
+
+    [Serializable]
+    public class AIRS_DATA
+    {
+        public int Transmission_type { get; set; }
+        public bool Remote_playback { get; set; }
+        public string Object_id { get; set; }
+        public byte[] Voice_data { get; set; }
     }
 
     public class Log

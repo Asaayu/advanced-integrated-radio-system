@@ -1,0 +1,17 @@
+P:\airs\_extension\airs_server\obj\x86\Debug\airs_server.csprojAssemblyReference.cache
+P:\airs\_extension\airs_server\obj\x86\Debug\airs_server.csproj.CoreCompileInputs.cache
+P:\airs\_extension\airs_server\bin\x86\Debug\opus.dll
+P:\airs\_extension\airs_server\bin\x86\Debug\airs_server_x64.dll.config
+P:\airs\_extension\airs_server\bin\x86\Debug\airs_server_x64.dll
+P:\airs\_extension\airs_server\bin\x86\Debug\airs_server_x64.pdb
+P:\airs\_extension\airs_server\bin\x86\Debug\NAudio.xml
+P:\airs\_extension\airs_server\bin\x86\Debug\NVorbis.xml
+P:\airs\_extension\airs_server\bin\x86\Debug\OpusDotNet.xml
+P:\airs\_extension\airs_server\bin\x86\Debug\System.Buffers.xml
+P:\airs\_extension\airs_server\bin\x86\Debug\System.Memory.xml
+P:\airs\_extension\airs_server\bin\x86\Debug\System.Numerics.Vectors.xml
+P:\airs\_extension\airs_server\bin\x86\Debug\System.Runtime.CompilerServices.Unsafe.xml
+P:\airs\_extension\airs_server\obj\x86\Debug\airs_server.csproj.Fody.CopyLocal.cache
+P:\airs\_extension\airs_server\obj\x86\Debug\airs_server.csproj.CopyComplete
+P:\airs\_extension\airs_server\obj\x86\Debug\airs_server_x64.dll
+P:\airs\_extension\airs_server\obj\x86\Debug\airs_server_x64.pdb

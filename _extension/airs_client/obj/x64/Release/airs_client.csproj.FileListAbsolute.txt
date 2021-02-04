@@ -10,4 +10,4 @@ P:\airs\_extension\airs_client\obj\x64\Release\airs_client_x64.dll
 P:\airs\_extension\airs_client\obj\x64\Release\airs_client_x64.pdb
 P:\airs\_extension\airs_client\obj\x64\Release\airs_client.csproj.CopyComplete
 P:\airs\_extension\airs_client\obj\x64\Release\airs_client.csproj.Fody.CopyLocal.cache
-F:\SteamLibrary\steamapps\common\Arma 3\@airs\opus.dll
+F:\SteamLibrary\steamapps\common\Arma 3\@airs\airs_client_x64.dll.config

@@ -69,6 +69,18 @@
 		"airs_client" callExtension format["set_local_playback:%1",[0,1] select _value];
 	}
 ] call CBA_fnc_addSetting;
+[
+	"airs_remote_playback",
+	"CHECKBOX",
+	["STR_AIRS_SETTINGS_REMOTE_PLAYBACK_TITLE","STR_AIRS_SETTINGS_REMOTE_PLAYBACK_TOOLTIP"],
+	["STR_AIRS_MOD_TITLE", "STR_AIRS_SETTINGS_MICROPHONE_TITLE"],
+	false,
+	2,
+	{
+		params ["_value"];
+		"airs_client" callExtension format["set_remote_playback:%1",[0,1] select _value];
+	}
+] call CBA_fnc_addSetting;
 
 // VOICE
 [

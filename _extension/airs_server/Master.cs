@@ -123,8 +123,8 @@ namespace airs_server
                 // ADD_CLIENT: Add a client to the clients list
                 case "add_client":
                     // Joined in the server
-                    UDP.clients.Add(parameters[1], IPAddress.Parse(parameters[2]));
-                    Log.Debug($"Client '{parameters[1]}' at '{parameters[2]}' added to clients dictionary");
+                    UDP.clients.Add(IPAddress.Parse(parameters[1]));
+                    Log.Debug($"Client '{parameters[1]}' added to clients dictionary");
                     return "true";
 
                 // INFO: Show version information
@@ -139,12 +139,10 @@ namespace airs_server
     {
         internal static string server_ip = new WebClient().DownloadString("http://icanhazip.com").Replace("\n", "").Replace(" ", "");
         internal const int server_port = 9986;
-        internal const int client_port = 9985;
-
-        internal static IPEndPoint end_point = new IPEndPoint(IPAddress.Any, 0);
+        internal static IPEndPoint client_end_point = new IPEndPoint(IPAddress.Any, 0);
 
         internal static UdpClient server;
-        internal static Dictionary<string,IPAddress> clients;
+        internal static HashSet<IPAddress> clients;
 
         private static Thread listen_thread;
 
@@ -153,14 +151,11 @@ namespace airs_server
             try
             {
                 // Create client ip list
-                clients = new Dictionary<string, IPAddress>();
+                clients = new HashSet<IPAddress>();
 
                 // Create UDP client on the defined port
                 server = new UdpClient(server_port);
                 server.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-                // Create listen thread
-                listen_thread = new Thread(Listen);
 
                 // Send info to clients 
                 Master.callback.Invoke("AIRS_VOIP_SERVER", "airs_set_server_address", server_ip);
@@ -179,42 +174,33 @@ namespace airs_server
                 return false;
             }
         }
+        
+        internal static bool Reset()
+        {
+            try
+            {
+                Log.Info("Resetting server data...");
+
+                // Remove all old users from the clients list.
+                clients.Clear();
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured resetting server data...");
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
 
         internal static bool Enable()
         {
             try
             {
-                //listen_thread.Start();
-
-                new Thread(() =>
-                {
-                    Thread.CurrentThread.IsBackground = true;
-                    while (true)
-                    {
-                        try
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Log.Info("Getting ready to wait!");
-                            Console.ResetColor();
-                            // Receive data
-                            byte[] data = server.Receive(ref end_point);
-                            Log.Debug("Received Data!");
-                            Log.Debug(Encoding.ASCII.GetString(data));
-                            Log.Debug("1");
-                        }
-                        catch (ThreadAbortException)
-                        {
-                            Log.Info("Listening thread execution aborted!");
-                            return;
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Info("An error occured when listening to UDP client on server...");
-                            Log.Error(e.ToString());
-                            return;
-                        }
-                    }
-                }).Start();
+                // Create listen thread & start ut
+                listen_thread = new Thread(Listen);
+                listen_thread.Start();
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Log.Info("Server is now transmitting data from clients...");
@@ -235,6 +221,9 @@ namespace airs_server
             {
                 listen_thread.Abort();
 
+                // Reset the server data, incase the server is started again without closing Arma 3.
+                Reset();
+
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 Log.Info($"Server is no longer transmitting data from clients...");
                 Console.ResetColor();
@@ -252,14 +241,17 @@ namespace airs_server
         {
             try
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Log.Info("Getting ready to wait!");
-                Console.ResetColor();
-                // Receive data
-                byte[] data = server.Receive(ref end_point);
-                Log.Debug("Received Data!");
-                Log.Debug(Encoding.ASCII.GetString(data));
-                Log.Debug("1");
+                while (true)
+                {
+                    // Receive data
+                    byte[] data = server.Receive(ref client_end_point);
+                    foreach (IPAddress ip in clients)
+                    {
+                        // Redirect the data to connected clients 
+                        Send(data);
+                    }
+                    Log.Debug("Sending data");
+                }
             }
             catch (ThreadAbortException)
             {
@@ -271,6 +263,22 @@ namespace airs_server
                 Log.Info("An error occured when listening to UDP client on server...");
                 Log.Error(e.ToString());
                 return;
+            }
+        }
+
+        internal static bool Send(byte[] data)
+        {
+            try
+            {
+                // Send data to client
+                server.Send(data, data.Length, new IPEndPoint(IPAddress.Broadcast, 0));
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info("An error occured sending data to UDP client on server...");
+                Log.Error(e.ToString());
+                return false;
             }
         }
     }
