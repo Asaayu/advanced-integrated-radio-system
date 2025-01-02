@@ -22,3 +22,5 @@
 
 # Ignored Executables
 hemtt.exe
+/extension/ts3_sdk_dotNet_0.2
+/extension/ts_sdk_3.3.1

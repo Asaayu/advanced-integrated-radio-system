@@ -20,10 +20,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step: Setup HEMTT
       - name: Setup HEMTT
         uses: arma-actions/hemtt@v1
 
-      # Step: Build development build using HEMTT
       - name: Build
         run: hemtt build

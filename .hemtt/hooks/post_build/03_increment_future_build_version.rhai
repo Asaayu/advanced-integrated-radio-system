@@ -1,6 +1,6 @@
 /*
-    Advanced Integrated Radio System
-    File: 02_increment_future_build_version.rhai
+    Integrated AI Voice Control System
+    File: 03_increment_future_build_version.rhai
     Author: Asaayu
     Date: 2024-12-26
 

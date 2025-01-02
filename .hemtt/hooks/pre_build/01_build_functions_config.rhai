@@ -1,5 +1,5 @@
 /*
-    Advanced Integrated Radio System
+    Integrated AI Voice Control System
     File: 01_build_functions_config.rhai
     Author: Asaayu
     Date: 2024-12-26
@@ -8,15 +8,15 @@
     PRE-BUILD
 
     Description:
-    Builds the CfgFunctions file for the AIRS functions using the file structure in the "functions_f_airs/functions" directory.
+    Builds the CfgFunctions file for the IVCS functions using the file structure in the "functions_f_ivcs/functions" directory.
 */
 
 // Define constants for paths
-const BASE_PATH = "\\z\\airs\\addons\\functions_f_airs\\functions\\";
-const CFG_FUNCTIONS_FILE_PATH = HEMTT_VFS.join("addons").join("functions_f_airs").join("cfgfunctions.hpp");
+const BASE_PATH = "\\z\\ivcs\\addons\\functions_f_ivcs\\functions\\";
+const CFG_FUNCTIONS_FILE_PATH = HEMTT_VFS.join("addons").join("functions_f_ivcs").join("cfgfunctions.hpp");
 
-// Get all the folders in the "functions_f_airs/functions" directory
-let functionFolders = HEMTT_VFS.join("addons").join("functions_f_airs").join("functions").list().filter(|x| x.is_dir());
+// Get all the folders in the "functions_f_ivcs/functions" directory
+let functionFolders = HEMTT_VFS.join("addons").join("functions_f_ivcs").join("functions").list().filter(|x| x.is_dir());
 
 // Create a list of functions in each of the folders
 let functionData = #{};

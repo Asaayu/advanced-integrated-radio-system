@@ -1,19 +1,21 @@
-name = "Advanced Integrated Radio System"
+name = "Integrated AI Voice Control System"
 author = "Asaayu"
-prefix = "airs"
+prefix = "ivcs"
 mainprefix = "z"
 
 keyname = "{{prefix}}_{{version}}"
 signame = "{{prefix}}_{{version}}-{{git \"id 8\"}}"
 
 [version]
-major = 0
+major = 2
 minor = 0
-patch = 0
-build = 0
+patch = 8
+build = 80
 
 [files]
 include = [
+    "grammar/*.pls",
+    "grammar/*.xml",
     "version_check.txt",
     "*.dll",
     "LICENSE",

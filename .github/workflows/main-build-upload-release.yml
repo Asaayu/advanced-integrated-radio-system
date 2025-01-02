@@ -64,15 +64,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: C:\Users\runneradmin\.nuget\packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('extension/AdvancedIntegratedRadioSystem.sln') }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('extension/IntegratedVoiceControlSystem.sln') }}
           restore-keys: |
             nuget-${{ runner.os }}-
 
       # Step: Install NuGet packages
       - name: Install NuGet packages
-        run: nuget restore extension/AdvancedIntegratedRadioSystem.sln
+        run: nuget restore extension/IntegratedVoiceControlSystem.sln
 
-      # Step: Install Microsoft Build Tools 2015
+      # Step: Install Microsoft Build Tools 2015 (only if not cached)
       - name: Install Microsoft Build Tools 2015
         run: |
           Write-Host "Downloading Microsoft Build Tools 2015..."
@@ -83,11 +83,11 @@ jobs:
 
       # Step: Build x64 Extension Configuration
       - name: Build x64 Extension Configuration
-        run: msbuild extension/AdvancedIntegratedRadioSystem.sln /p:Configuration=Release /p:Platform=x64
+        run: msbuild extension/IntegratedVoiceControlSystem.sln /p:Configuration=Release /p:Platform=x64
 
       # Step: Build x86 Extension Configuration
       - name: Build x86 Extension Configuration
-        run: msbuild extension/AdvancedIntegratedRadioSystem.sln /p:Configuration=Release /p:Platform=x86
+        run: msbuild extension/IntegratedVoiceControlSystem.sln /p:Configuration=Release /p:Platform=x86
 
       # Step: Build Release Candidate using HEMTT
       - name: Build Release Candidate
@@ -146,7 +146,7 @@ jobs:
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           files: |
-            ./releases/airs-*.*.*.*-*.zip
+            ./releases/ivcs-*.*.*.*-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

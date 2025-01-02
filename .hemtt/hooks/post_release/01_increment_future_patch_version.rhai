@@ -1,5 +1,5 @@
 /*
-    Advanced Integrated Radio System
+    Integrated AI Voice Control System
     File: 01_increment_future_patch_version.rhai
     Author: Asaayu
     Date: 2024-12-26

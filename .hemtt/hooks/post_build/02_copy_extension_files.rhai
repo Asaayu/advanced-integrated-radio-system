@@ -1,6 +1,6 @@
 /*
-    Advanced Integrated Radio System
-    File: 01_copy_extension_files.rhai
+    Integrated AI Voice Control System
+    File: 02_copy_extension_files.rhai
     Author: Asaayu
     Date: 2024-12-27
 
